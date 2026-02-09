@@ -13,10 +13,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
+import os
+prefix = "/api" if os.getenv("VERCEL") else ""
+
+app.include_router(auth_router, prefix=prefix)
 
 
-@app.get("/")
+@app.get(prefix + "/")
 def root():
     return {"message": "MindRise API", "docs": "/docs"}
 
