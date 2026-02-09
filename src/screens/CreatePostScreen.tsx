@@ -1,0 +1,1 @@
+export default function CreatePostScreen() { return <div>CreatePostScreen</div>; }
