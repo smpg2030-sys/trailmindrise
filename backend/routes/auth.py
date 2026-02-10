@@ -108,7 +108,8 @@ def verify_otp(data: OTPVerify):
         full_name=user.get("full_name"),
         role=user.get("role", "user"),
         is_verified=True,
-        profile_pic=user.get("profile_pic")
+        profile_pic=user.get("profile_pic"),
+        bio=user.get("bio")
     )
 
 @router.post("/login", response_model=UserResponse)
@@ -130,7 +131,8 @@ def login(data: UserLogin):
         full_name=user.get("full_name") or None,
         role=user.get("role", "user"),
         is_verified=True,
-        profile_pic=user.get("profile_pic")
+        profile_pic=user.get("profile_pic"),
+        bio=user.get("bio")
     )
 
 @router.get("/user/{user_id}", response_model=UserResponse)
@@ -154,7 +156,8 @@ def get_user(user_id: str):
         full_name=user.get("full_name"),
         role=user.get("role", "user"),
         is_verified=user.get("is_verified", False),
-        profile_pic=user.get("profile_pic")
+        profile_pic=user.get("profile_pic"),
+        bio=user.get("bio")
     )
 
 class ProfilePicUpdate(BaseModel):
@@ -187,5 +190,71 @@ def update_profile_pic(user_id: str, data: ProfilePicUpdate):
         full_name=result.get("full_name"),
         role=result.get("role", "user"),
         is_verified=result.get("is_verified", False),
-        profile_pic=result.get("profile_pic")
+        profile_pic=result.get("profile_pic"),
+        bio=result.get("bio")
+    )
+
+@router.delete("/user/{user_id}/profile-pic", response_model=UserResponse)
+def delete_profile_pic(user_id: str):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    from bson import ObjectId
+    try:
+        oid = ObjectId(user_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid User ID")
+    
+    result = db.users.find_one_and_update(
+        {"_id": oid},
+        {"$set": {"profile_pic": None}},
+        return_document=True
+    )
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return UserResponse(
+        id=str(result["_id"]),
+        email=result["email"],
+        full_name=result.get("full_name"),
+        role=result.get("role", "user"),
+        is_verified=result.get("is_verified", False),
+        profile_pic=result.get("profile_pic"),
+        bio=result.get("bio")
+    )
+
+class BioUpdate(BaseModel):
+    bio: str | None = None
+
+@router.put("/user/{user_id}/bio", response_model=UserResponse)
+def update_bio(user_id: str, data: BioUpdate):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    from bson import ObjectId
+    try:
+        oid = ObjectId(user_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid User ID")
+    
+    result = db.users.find_one_and_update(
+        {"_id": oid},
+        {"$set": {"bio": data.bio}},
+        return_document=True
+    )
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return UserResponse(
+        id=str(result["_id"]),
+        email=result["email"],
+        full_name=result.get("full_name"),
+        role=result.get("role", "user"),
+        is_verified=result.get("is_verified", False),
+        profile_pic=result.get("profile_pic"),
+        bio=result.get("bio")
     )

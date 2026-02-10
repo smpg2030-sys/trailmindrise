@@ -20,6 +20,7 @@ class UserResponse(BaseModel):
     full_name: str | None = None
     is_verified: bool = False
     profile_pic: str | None = None
+    bio: str | None = None
 
 
 class PostCreate(BaseModel):

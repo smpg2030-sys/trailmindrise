@@ -19,6 +19,9 @@ export default function ProfileScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioDraft, setBioDraft] = useState(user?.bio || "");
+  const [isSavingBio, setIsSavingBio] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -102,7 +105,52 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleBioSave = async () => {
+    if (!user) return;
+    setIsSavingBio(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/user/${user.id}/bio`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio: bioDraft }),
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        setIsEditingBio(false);
+      } else {
+        alert("Failed to update bio");
+      }
+    } catch (error) {
+      console.error("Bio update error", error);
+      alert("Error updating bio");
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const handleDeleteProfilePic = async () => {
+    if (!user || !user.profile_pic) return;
+    if (!confirm("Are you sure you want to remove your profile picture?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/user/${user.id}/profile-pic`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+      } else {
+        alert("Failed to remove profile picture");
+      }
+    } catch (error) {
+      console.error("Profile pic deletion error", error);
+      alert("Error removing profile picture");
+    }
+  };
+
   const getStatusBadge = (post: Post) => {
+
     switch (post.status) {
       case "approved":
         return <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Approved</span>;
@@ -152,15 +200,63 @@ export default function ProfileScreen() {
           <h2 className="text-2xl font-bold text-slate-800">
             {user.full_name || user.email.split("@")[0]}
           </h2>
-          <p className="text-slate-400 text-xs mt-1">{user.email}</p>
-          <div className="flex gap-2 justify-center mt-2">
+          <p className="text-slate-400 text-xs mt-1 mb-3">{user.email}</p>
+
+          <div className="w-full max-w-sm px-4">
+            {isEditingBio ? (
+              <div className="space-y-2">
+                <textarea
+                  className="w-full p-3 border-2 border-green-200 rounded-xl text-sm focus:border-green-500 transition outline-none"
+                  placeholder="Tell us about your mindful journey..."
+                  value={bioDraft}
+                  onChange={(e) => setBioDraft(e.target.value)}
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-center">
+                  <button
+                    onClick={() => {
+                      setIsEditingBio(false);
+                      setBioDraft(user.bio || "");
+                    }}
+                    className="px-4 py-1.5 text-xs font-bold text-slate-500 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleBioSave}
+                    disabled={isSavingBio}
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-green-500 rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+                  >
+                    {isSavingBio ? "Saving..." : "Save Bio"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="group cursor-pointer" onClick={() => {
+                setBioDraft(user.bio || "");
+                setIsEditingBio(true);
+              }}>
+                <p className="text-slate-600 text-sm italic line-clamp-2 px-2">
+                  {user.bio || "Click to add a bio..."}
+                </p>
+                <button className="text-[10px] text-green-500 font-bold uppercase tracking-wider mt-1 opacity-0 group-hover:opacity-100 transition">
+                  Edit Bio
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 justify-center mt-4">
             <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tighter bg-slate-100 px-2 py-0.5 rounded">
               {user.role}
             </span>
             {user.profile_pic && (
-              <span className="text-emerald-600 text-[10px] uppercase font-bold tracking-tighter bg-emerald-50 px-2 py-0.5 rounded">
-                Verified
-              </span>
+              <button
+                onClick={handleDeleteProfilePic}
+                className="text-red-500 text-[10px] uppercase font-bold tracking-tighter bg-red-50 px-2 py-0.5 rounded hover:bg-red-100 transition"
+              >
+                Remove Photo
+              </button>
             )}
           </div>
         </div>
