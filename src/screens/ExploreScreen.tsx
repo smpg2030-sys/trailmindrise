@@ -22,7 +22,7 @@ const COMMUNITY_STORIES = [
     title: "Indian AI Reading Document",
     source: "The Better India",
     link: "https://thebetterindia.com/innovation/indian-ai-document-reading-sarvam-gemini-openai-language-tests-11092770",
-    cover: "🤖",
+    cover: "/images/sarvam-ai.png",
     description: "How Sarvam AI is breaking language barriers in document reading."
   }
 ];
@@ -118,7 +118,13 @@ export default function ExploreScreen() {
               {COMMUNITY_STORIES.map((story, i) => (
                 <div key={i} className="bg-slate-50 rounded-2xl p-4 flex flex-col gap-3">
                   <div className="flex gap-4">
-                    <span className="text-4xl p-3 bg-white rounded-xl shadow-sm">{story.cover}</span>
+                    <div className="w-16 h-16 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
+                      {story.cover.startsWith("/") ? (
+                        <img src={story.cover} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-3xl">{story.cover}</span>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-slate-800 text-lg leading-tight">{story.title}</h3>
                       <p className="text-sm text-slate-500 mt-1">{story.source}</p>
