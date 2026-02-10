@@ -189,7 +189,7 @@ export default function HomeFeedScreen() {
                 <img
                   src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
                   alt="Post content"
-                  className="w-full h-48 object-cover rounded-xl mt-3"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-xl mt-3 bg-slate-50"
                 />
               )}
             </div>

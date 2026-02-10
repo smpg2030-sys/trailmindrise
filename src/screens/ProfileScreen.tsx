@@ -216,7 +216,7 @@ export default function ProfileScreen() {
                     <img
                       src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
                       alt="Post content"
-                      className="w-full h-32 object-cover rounded-xl mb-2"
+                      className="w-full h-auto max-h-[400px] object-contain rounded-xl mb-2 bg-slate-50"
                     />
                   )}
                   {post.status === "rejected" && (
