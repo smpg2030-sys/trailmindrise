@@ -24,7 +24,7 @@ prefix = "/api" if os.getenv("VERCEL") else ""
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-app.mount("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
+app.mount(prefix + "/static", StaticFiles(directory=UPLOAD_DIR), name="static")
 
 app.include_router(auth_router, prefix=prefix)
 app.include_router(admin_router, prefix=prefix)
