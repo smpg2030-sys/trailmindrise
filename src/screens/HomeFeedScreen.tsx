@@ -187,7 +187,7 @@ export default function HomeFeedScreen() {
               <p className="text-slate-700">{post.content}</p>
               {post.image_url && (
                 <img
-                  src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
+                  src={post.image_url}
                   alt="Post content"
                   className="w-full h-auto max-h-[500px] object-contain rounded-xl mt-3 bg-slate-50"
                 />

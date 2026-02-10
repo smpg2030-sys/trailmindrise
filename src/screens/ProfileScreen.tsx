@@ -214,7 +214,7 @@ export default function ProfileScreen() {
                   <p className="text-slate-700 text-sm mb-2">{post.content}</p>
                   {post.image_url && (
                     <img
-                      src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
+                      src={post.image_url}
                       alt="Post content"
                       className="w-full h-auto max-h-[400px] object-contain rounded-xl mb-2 bg-slate-50"
                     />

@@ -214,7 +214,7 @@ export default function AdminPanelScreen() {
                 </p>
                 {post.image_url && (
                   <img
-                    src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
+                    src={post.image_url}
                     alt="Post content"
                     className="w-full h-auto max-h-[500px] object-contain rounded-xl mb-4 bg-slate-50"
                   />
