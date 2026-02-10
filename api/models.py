@@ -30,6 +30,7 @@ class PostResponse(BaseModel):
     id: str
     user_id: str
     author_name: str
+    author_email: str | None = None
     content: str
     image_url: str | None = None
     status: str  # "pending", "approved", "rejected"

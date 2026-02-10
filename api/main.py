@@ -15,12 +15,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi.staticfiles import StaticFiles
+from routes.upload import router as upload_router
 import os
+
 prefix = "/api" if os.getenv("VERCEL") else ""
+
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
 app.include_router(auth_router, prefix=prefix)
 app.include_router(admin_router, prefix=prefix)
 app.include_router(posts_router, prefix=prefix)
+app.include_router(upload_router, prefix=prefix)
 
 
 @app.get(prefix + "/health")

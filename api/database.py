@@ -22,7 +22,6 @@ def get_client() -> MongoClient:
         except (ConnectionFailure, ConfigurationError) as e:
             print(f"CRITICAL: Could not connect to MongoDB: {e}")
             # We don't exit here to allow the app to start, but routes will fail
-            _client = None
     return _client
 
 
