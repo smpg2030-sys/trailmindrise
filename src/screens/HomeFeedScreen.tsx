@@ -200,7 +200,9 @@ export default function HomeFeedScreen() {
               )}
             </div>
           </div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">MindRise</h1>
+          <h1 className="text-lg font-bold text-slate-800 tracking-tight truncate max-w-[200px]">
+            Welcome, {user?.full_name || user?.email?.split("@")[0] || "Friend"}
+          </h1>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -233,8 +235,8 @@ export default function HomeFeedScreen() {
               type="button"
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 shadow-sm ${activeTab === tab
-                  ? "bg-slate-800 text-white shadow-slate-200 scale-105"
-                  : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
+                ? "bg-slate-800 text-white shadow-slate-200 scale-105"
+                : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
                 }`}
             >
               {tab}
