@@ -79,7 +79,14 @@ export default function HomeFeedScreen() {
           const data = await uploadRes.json();
           imageUrl = data.url;
         } else {
-          throw new Error("Image upload failed");
+          let errorDetail = "Image upload failed";
+          try {
+            const errorData = await uploadRes.json();
+            errorDetail = errorData.detail || errorDetail;
+          } catch (e) {
+            // Keep default if JSON fails
+          }
+          throw new Error(`${errorDetail} (Status: ${uploadRes.status})`);
         }
       }
 
