@@ -64,30 +64,16 @@ export default function HomeFeedScreen() {
     if ((!postContent.trim() && !selectedFile) || !user) return;
 
     setIsUploading(true);
+    let imageUrl = null;
     try {
-      let imageUrl = null;
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-
-        const uploadRes = await fetch(`${API_BASE}/upload/`, {
-          method: "POST",
-          body: formData,
+        // Convert to Base64 for reliable Vercel storage
+        imageUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = error => reject(error);
         });
-
-        if (uploadRes.ok) {
-          const data = await uploadRes.json();
-          imageUrl = data.url;
-        } else {
-          let errorDetail = "Image upload failed";
-          try {
-            const errorData = await uploadRes.json();
-            errorDetail = errorData.detail || errorDetail;
-          } catch (e) {
-            // Keep default if JSON fails
-          }
-          throw new Error(`${errorDetail} (Status: ${uploadRes.status})`);
-        }
       }
 
       // Fix: Use template literal instead of URL object to avoid Vercel relative URL issues
@@ -193,11 +179,13 @@ export default function HomeFeedScreen() {
               </div>
               <p className="text-slate-700">{post.content}</p>
               {post.image_url && (
-                <img
-                  src={post.image_url}
-                  alt="Post content"
-                  className="w-full h-auto max-h-[500px] object-contain rounded-xl mt-3 bg-slate-50"
-                />
+                <div className="mt-3 bg-slate-900/5 rounded-xl overflow-hidden flex items-center justify-center">
+                  <img
+                    src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
+                    alt="Post content"
+                    className="w-full h-auto max-h-[400px] object-contain"
+                  />
+                </div>
               )}
             </div>
           ))

@@ -213,11 +213,13 @@ export default function AdminPanelScreen() {
                   {post.content}
                 </p>
                 {post.image_url && (
-                  <img
-                    src={post.image_url}
-                    alt="Post content"
-                    className="w-full h-auto max-h-[500px] object-contain rounded-xl mb-4 bg-slate-50"
-                  />
+                  <div className="mt-3 bg-slate-900/5 rounded-xl overflow-hidden flex items-center justify-center">
+                    <img
+                      src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
+                      alt="Post content"
+                      className="w-full h-auto max-h-[400px] object-contain"
+                    />
+                  </div>
                 )}
 
                 {post.status === "rejected" && post.rejection_reason && (
