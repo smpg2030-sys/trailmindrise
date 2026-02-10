@@ -6,10 +6,10 @@ export default function TherapistSupportScreen() {
   const navigate = useNavigate();
   const [connecting, setConnecting] = useState(true);
   const [therapist] = useState({
-    name: "Dr. Sarah Johnson",
+    name: "Manikanta",
     title: "Crisis Counselor",
     specialty: "Anxiety & Stress Management",
-    experience: "12 years",
+    experience: "5+ years",
   });
 
   useEffect(() => {
@@ -76,18 +76,20 @@ export default function TherapistSupportScreen() {
           </div>
 
           <div className="space-y-3 mb-6">
-            <button
-              type="button"
-              className="w-full py-4 rounded-xl font-semibold text-white bg-green-500 flex items-center justify-center gap-2"
+            <a
+              href="tel:9398789351"
+              className="w-full py-4 rounded-xl font-semibold text-white bg-green-500 flex items-center justify-center gap-2 no-underline"
             >
-              <span>📞</span> Call Now
-            </button>
-            <button
-              type="button"
-              className="w-full py-4 rounded-xl font-semibold text-white bg-sky-500 flex items-center justify-center gap-2"
+              <span>📞</span> Call Now (9398789351)
+            </a>
+            <a
+              href="https://wa.me/919398789351?text=Hello,%20I%20need%20immediate%20support."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-4 rounded-xl font-semibold text-white bg-sky-500 flex items-center justify-center gap-2 no-underline"
             >
-              <span>💬</span> Start Chat
-            </button>
+              <span>💬</span> Chat on WhatsApp
+            </a>
             <button
               type="button"
               className="w-full py-4 rounded-xl font-semibold text-white bg-violet-500 flex items-center justify-center gap-2"
@@ -110,3 +112,4 @@ export default function TherapistSupportScreen() {
     </div>
   );
 }
+

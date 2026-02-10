@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.auth import router as auth_router
+from routes.admin import router as admin_router
 
 app = FastAPI(title="MindRise API", version="1.0.0")
 
@@ -17,6 +18,7 @@ import os
 prefix = "/api" if os.getenv("VERCEL") else ""
 
 app.include_router(auth_router, prefix=prefix)
+app.include_router(admin_router, prefix=prefix)
 
 
 @app.get(prefix + "/health")

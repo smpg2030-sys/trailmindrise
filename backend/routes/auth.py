@@ -18,6 +18,9 @@ def verify_password(plain: str, hashed: str) -> bool:
 @router.post("/register", response_model=UserResponse)
 def register(data: UserRegister):
     db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database connection not established. Please check your configuration.")
+    
     users = db.users
     if users.find_one({"email": data.email}):
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -37,6 +40,9 @@ def register(data: UserRegister):
 @router.post("/login", response_model=UserResponse)
 def login(data: UserLogin):
     db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database connection not established. Please check your configuration.")
+    
     user = db.users.find_one({"email": data.email})
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")

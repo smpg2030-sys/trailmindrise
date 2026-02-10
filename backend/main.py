@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.auth import router as auth_router
+from routes.admin import router as admin_router
 
 app = FastAPI(title="MindRise API", version="1.0.0")
 
@@ -13,9 +14,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
+import os
+prefix = "/api" if os.getenv("VERCEL") else ""
+
+app.include_router(auth_router, prefix=prefix)
+app.include_router(admin_router, prefix=prefix)
 
 
-@app.get("/")
+@app.get(prefix + "/health")
+def health():
+    try:
+        from database import get_db
+        db = get_db()
+        # Ping the database to check connection
+        db.command("ping")
+        return {"status": "ok", "db": "connected"}
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc() if os.getenv("VERCEL") else None
+        }
+
+
+@app.get(prefix + "/")
 def root():
     return {"message": "MindRise API", "docs": "/docs"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
