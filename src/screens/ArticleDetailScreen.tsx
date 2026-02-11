@@ -3,6 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Share2, Clock, User } from "lucide-react";
 import { motion } from "framer-motion";
 
+const getApiBase = () => {
+    const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api");
+    if (base.startsWith("http")) return base;
+    return window.location.origin + (base.startsWith("/") ? "" : "/") + base;
+};
+
+const API_BASE = getApiBase();
+
 export default function ArticleDetailScreen() {
     const { articleId } = useParams();
     const navigate = useNavigate();
@@ -10,7 +18,7 @@ export default function ArticleDetailScreen() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`http://localhost:8000/api/news/${articleId}`)
+        fetch(`${API_BASE}/news/${articleId}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Article not found");
                 return res.json();
