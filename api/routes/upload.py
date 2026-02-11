@@ -5,7 +5,11 @@ import uuid
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
-UPLOAD_DIR = "uploads"
+if os.getenv("VERCEL"):
+    UPLOAD_DIR = "/tmp/uploads"
+else:
+    UPLOAD_DIR = "uploads"
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/")

@@ -22,7 +22,19 @@ import os
 
 prefix = "/api" if os.getenv("VERCEL") else ""
 
-app.mount("/static", StaticFiles(directory="uploads"), name="static")
+if os.getenv("VERCEL"):
+    UPLOAD_DIR = "/tmp/uploads"
+else:
+    UPLOAD_DIR = "uploads"
+
+if not os.path.exists(UPLOAD_DIR):
+    try:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+    except:
+        pass # Ignore if cannot create
+
+if os.path.exists(UPLOAD_DIR):
+    app.mount("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
 
 app.include_router(auth_router, prefix=prefix)
 app.include_router(admin_router, prefix=prefix)
