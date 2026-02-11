@@ -6,7 +6,7 @@ import { Post, Video } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoPlayer from "../components/VideoPlayer";
 
-const TABS = ["All Posts", "Daily Quotes", "Gratitude"] as const;
+const TABS = ["Videos", "All Posts", "Daily Quotes", "Gratitude"] as const;
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "/api");
@@ -19,7 +19,7 @@ const API_BASE = getApiBase();
 export default function HomeFeedScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("All Posts");
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Videos");
   const [showNewPost, setShowNewPost] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [postContent, setPostContent] = useState("");
@@ -48,10 +48,16 @@ export default function HomeFeedScreen() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const url = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setPosts(data);
+      if (activeTab === "Videos") {
+        const res = await fetch(`${API_BASE}/videos/`);
+        const data = await res.json();
+        setVideos(data);
+      } else {
+        const url = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
+        const res = await fetch(url);
+        const data = await res.json();
+        setPosts(data);
+      }
     } catch (error) {
       console.error("Error fetching feed:", error);
     } finally {
@@ -292,6 +298,42 @@ export default function HomeFeedScreen() {
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="w-8 h-8 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin"></div>
             <p className="text-slate-400 font-medium">Loading feed...</p>
+          </div>
+        ) : activeTab === "Videos" ? (
+          <div className="grid grid-cols-1 gap-6">
+            {videos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <VideoIcon className="w-16 h-16 text-slate-200 mb-4" />
+                <p className="text-xl font-bold text-slate-700">No videos yet</p>
+              </div>
+            ) : (
+              videos.map((video, index) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group"
+                >
+                  <div className="p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs">
+                      {video.author_name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">{video.author_name}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">{video.created_at ? new Date(video.created_at).toLocaleDateString() : 'Just now'}</p>
+                    </div>
+                  </div>
+                  <h3 className="px-4 pb-3 font-bold text-slate-800">{video.title}</h3>
+                  <div className="aspect-[9/16] max-h-[600px] w-full bg-black">
+                    <VideoPlayer
+                      src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
+                      className="h-full"
+                    />
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         ) : posts.length === 0 ? (
           <motion.div

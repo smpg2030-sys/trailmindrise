@@ -8,16 +8,30 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 
 @router.get("/", response_model=list[VideoResponse])
 def get_all_videos():
-    db = get_db()
-    if db is None:
+    from database import get_client
+    client = get_client()
+    if client is None:
         raise HTTPException(status_code=503, detail="Database connection not established")
     
-    # Return all approved videos worldwide
-    videos_cursor = db.videos.find().sort("created_at", -1)
+    # Point specifically to MindRiseDB as requested
+    db = client["MindRiseDB"]
+    
+    # Fetch approved videos sorted by created_at descending
+    videos_cursor = db.user_videos.find({"status": "Approved"}).sort("created_at", -1)
     
     results = []
     for doc in videos_cursor:
         doc["id"] = str(doc["_id"])
+        # Ensure fallback for fields if they are missing in manual records
+        if "author_name" not in doc:
+            doc["author_name"] = "MindRise User"
+        if "title" not in doc:
+            doc["title"] = "Inspirational Moment"
+        if "created_at" not in doc:
+            doc["created_at"] = datetime.utcnow().isoformat()
+        if "user_id" not in doc:
+            doc["user_id"] = "system"
+            
         results.append(doc)
     return results
 
