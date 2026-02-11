@@ -30,6 +30,15 @@ export default function HomeFeedScreen() {
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [friendRequests, setFriendRequests] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileBanner, setShowProfileBanner] = useState(false);
+
+  useEffect(() => {
+    if (user && (!user.email || !user.full_name)) {
+      setShowProfileBanner(true);
+    } else {
+      setShowProfileBanner(false);
+    }
+  }, [user]);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -254,6 +263,28 @@ export default function HomeFeedScreen() {
       </div>
 
       <div className="px-4 pt-4 pb-20 space-y-5">
+        <AnimatePresence>
+          {showProfileBanner && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4 flex items-center justify-between"
+            >
+              <div>
+                <p className="font-bold text-amber-800 text-sm">Complete your profile</p>
+                <p className="text-xs text-amber-600">Add your email and name to recover your account easily.</p>
+              </div>
+              <button
+                onClick={() => navigate("/profile", { state: { openEdit: true } })}
+                className="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-amber-600 transition"
+              >
+                Complete
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="w-8 h-8 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin"></div>

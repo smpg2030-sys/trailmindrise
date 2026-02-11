@@ -8,6 +8,7 @@ from database import get_db
 from models import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import BaseModel, EmailStr
+from services.sms import SMSService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -93,10 +94,20 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
         )
         fm = FastMail(conf)
         background_tasks.add_task(fm.send_message, message)
+    # Send OTP
+    if data.email:
+        message = MessageSchema(
+            subject="MindRise Verification OTP",
+            recipients=[data.email],
+            body=f"Your verification code is: {otp}",
+            subtype=MessageType.html
+        )
+        fm = FastMail(conf)
+        background_tasks.add_task(fm.send_message, message)
         return {"message": "OTP sent to email. Please verify."}
     else:
-        # Mock SMS
-        print(f"------------ SMS OTP for {data.mobile}: {otp} ------------")
+        # Send SMS via Service
+        SMSService.send_otp(data.mobile, otp)
         return {"message": "OTP sent to mobile. Please verify."}
 
 @router.post("/verify-otp", response_model=UserResponse)
@@ -338,6 +349,56 @@ def update_bio(user_id: str, data: BioUpdate):
     return UserResponse(
         id=str(result["_id"]),
         email=result["email"],
+        full_name=result.get("full_name"),
+        role=result.get("role", "user"),
+        is_verified=result.get("is_verified", False),
+        profile_pic=result.get("profile_pic"),
+        bio=result.get("bio")
+    )
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    full_name: str | None = None
+
+@router.put("/user/{user_id}/profile", response_model=UserResponse)
+def update_profile(user_id: str, data: UserUpdate):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    from bson import ObjectId
+    try:
+        oid = ObjectId(user_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid User ID")
+    
+    # Check for email duplication if email is being updated
+    if data.email:
+        existing = db.users.find_one({"email": data.email})
+        if existing and str(existing["_id"]) != user_id:
+             raise HTTPException(status_code=400, detail="Email already in use")
+
+    update_data = {}
+    if data.email:
+        update_data["email"] = data.email
+    if data.full_name:
+        update_data["full_name"] = data.full_name
+        
+    if not update_data:
+         raise HTTPException(status_code=400, detail="No data provided")
+
+    result = db.users.find_one_and_update(
+        {"_id": oid},
+        {"$set": update_data},
+        return_document=True
+    )
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return UserResponse(
+        id=str(result["_id"]),
+        email=result.get("email"),
+        mobile=result.get("mobile"),
         full_name=result.get("full_name"),
         role=result.get("role", "user"),
         is_verified=result.get("is_verified", False),

@@ -40,11 +40,16 @@ def get_stats(role: str):
         raise HTTPException(status_code=503, detail="Database connection not established.")
     
     user_count = db.users.count_documents({})
+    email_users = db.users.count_documents({"email": {"$ne": None}})
+    mobile_users = db.users.count_documents({"mobile": {"$ne": None}})
+    
     # Count pending posts from the pending collection
     pending_count = db.pending_posts.count_documents({"status": "pending"})
     
     return {
         "total_users": user_count,
+        "email_users": email_users,
+        "mobile_users": mobile_users,
         "pending_moderation": pending_count
     }
 

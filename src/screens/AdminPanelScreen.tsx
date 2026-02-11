@@ -17,7 +17,7 @@ export default function AdminPanelScreen() {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [stats, setStats] = useState({ total_users: 0, pending_moderation: 0 });
+  const [stats, setStats] = useState({ total_users: 0, pending_moderation: 0, email_users: 0, mobile_users: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"users" | "pending" | "history">("pending");
   const [historyFilter, setHistoryFilter] = useState<"all" | "approved" | "rejected">("all");
@@ -109,6 +109,10 @@ export default function AdminPanelScreen() {
             <span className="text-xs font-bold uppercase tracking-wider">Total Users</span>
           </div>
           <div className="text-2xl font-bold text-slate-800">{stats.total_users}</div>
+          <div className="flex gap-2 mt-2 text-xs text-slate-500">
+            <span>📧 {stats.email_users || 0}</span>
+            <span>📱 {stats.mobile_users || 0}</span>
+          </div>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <div className="flex items-center gap-2 text-amber-500 mb-1">
