@@ -93,7 +93,12 @@ export default function ProfileScreen() {
       const res = await fetch(`${API_BASE}/videos/user/${user.id}`);
       if (res.ok) {
         const data = await res.json();
-        setMyVideos(data);
+        if (Array.isArray(data)) {
+          setMyVideos(data);
+        } else {
+          console.error("Expected array for my videos, got:", data);
+          setMyVideos([]);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch my videos", error);
