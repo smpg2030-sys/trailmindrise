@@ -4,6 +4,7 @@ import os
 import random
 import string
 from fastapi import APIRouter, HTTPException, BackgroundTasks
+from bson import ObjectId
 from database import get_db
 from models import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
