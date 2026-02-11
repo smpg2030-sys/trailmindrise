@@ -238,33 +238,41 @@ export default function AdminPanelScreen() {
               <div key={video.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs uppercase">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xs uppercase">
                       {video.author_name ? video.author_name[0] : "?"}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">{video.author_name}</p>
-                      <p className="text-xs text-slate-500">{video.author_email}</p>
-                      <p className="text-xs text-slate-400">{new Date(video.created_at).toLocaleString()}</p>
+                      <p className="font-bold text-sm text-slate-800">{video.author_name}</p>
+                      {video.author_email && <p className="text-[10px] text-slate-500">{video.author_email}</p>}
                     </div>
                   </div>
+                  <span className="text-[10px] font-medium text-slate-400">{new Date(video.created_at).toLocaleString()}</span>
                 </div>
-                <h3 className="font-bold text-slate-800 mb-3 text-lg leading-tight">{video.title || "Untitled Video"}</h3>
-                <div className="bg-slate-900 rounded-2xl overflow-hidden aspect-[9/16] max-h-[500px] relative mb-6 border border-slate-100 shadow-inner">
+
+                <h3 className="font-bold text-slate-800 mb-1 text-base leading-tight">
+                  {video.title || "Untitled Video"}
+                </h3>
+                {video.caption && (
+                  <p className="text-xs text-slate-600 mb-3 italic">"{video.caption}"</p>
+                )}
+
+                <div className="bg-black rounded-2xl overflow-hidden aspect-[9/16] max-h-[500px] relative mb-6 border border-slate-100 shadow-inner group">
                   <VideoPlayer
                     src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
                     className="w-full h-full"
                   />
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex gap-3">
                   <button
                     onClick={() => handleVideoModeration(video.id, "approved")}
-                    className="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2"
+                    className="flex-1 bg-emerald-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 active:scale-95"
                   >
                     <CheckCircle className="w-4 h-4" /> Approve
                   </button>
                   <button
                     onClick={() => handleVideoModeration(video.id, "rejected")}
-                    className="flex-1 bg-red-50 text-red-700 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition flex items-center justify-center gap-2"
+                    className="flex-1 bg-rose-50 text-rose-600 py-3 rounded-xl text-sm font-bold hover:bg-rose-100 border border-rose-100 transition-all flex items-center justify-center gap-2 active:scale-95"
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>

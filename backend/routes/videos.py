@@ -17,7 +17,7 @@ def get_all_videos():
     db = client["MindRiseDB"]
     
     # Fetch approved videos sorted by created_at descending
-    videos_cursor = db.user_videos.find({"status": "Approved"}).sort("created_at", -1)
+    videos_cursor = db.user_videos.find({"status": {"$in": ["approved", "Approved"]}}).sort("created_at", -1)
     
     results = []
     for doc in videos_cursor:

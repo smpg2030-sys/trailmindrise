@@ -48,13 +48,19 @@ def get_stats(role: str):
     mobile_users = db.users.count_documents({"mobile": {"$ne": None}})
     
     # Count pending posts from the pending collection
-    pending_count = db.pending_posts.count_documents({"status": "pending"})
+    pending_posts = db.pending_posts.count_documents({"status": "pending"})
+    
+    # Count pending videos from MindRiseDB
+    from database import get_client
+    client = get_client()
+    db_videos = client["MindRiseDB"]
+    pending_videos = db_videos.user_videos.count_documents({"status": {"$in": ["pending", "Pending"]}})
     
     return {
         "total_users": user_count,
         "email_users": email_users,
         "mobile_users": mobile_users,
-        "pending_moderation": pending_count
+        "pending_moderation": pending_posts + pending_videos
     }
 
 @router.get("/posts", response_model=List[PostResponse])
