@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Post, User, Video } from "../types";
-import { Users, FileText, CheckCircle, XCircle, AlertCircle, History, Filter, Video as VideoIcon } from "lucide-react";
+import { Users, FileText, CheckCircle, XCircle, Video as VideoIcon } from "lucide-react";
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "/api");
