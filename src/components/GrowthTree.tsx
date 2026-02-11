@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { TreePine, Sprout, Leaf, Flower2, Sparkles } from "lucide-react";
+import { TreePine, Leaf, Flower2, Sparkles } from "lucide-react";
 
 interface GrowthTreeProps {
     createdAt?: string | null;
