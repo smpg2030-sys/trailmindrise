@@ -8,3 +8,4 @@ fastapi-mail==1.4.1
 dnspython==2.6.1
 python-multipart
 cloudinary
+twilio

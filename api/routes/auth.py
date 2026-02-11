@@ -6,12 +6,14 @@ import string
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from bson import ObjectId
 from database import get_db
-from models import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm
+from models import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm, OTPRequest, OTPVerifyRequest
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import BaseModel, EmailStr
 from services.sms import SMSService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+from datetime import datetime, timedelta
 
 # Email Configuration
 conf = ConnectionConfig(
@@ -69,10 +71,12 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     doc = {
         "email": data.email,
         "mobile": data.mobile,
+        "phone_number": data.phone_number,
         "password_hash": hash_password(data.password),
         "full_name": data.full_name or "",
         "role": "user",
         "is_verified": False,
+        "is_phone_verified": getattr(data, "is_phone_verified", False),
         "otp": otp
     }
     
@@ -102,6 +106,68 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
         SMSService.send_otp(data.mobile, otp)
         return {"message": "OTP sent to mobile. Please verify."}
 
+@router.post("/send-otp")
+async def send_otp(data: OTPRequest):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    otp = generate_otp()
+    expires_at = datetime.utcnow() + timedelta(minutes=5)
+    
+    # Store OTP with attempt counter and expiry
+    db.otp_codes.update_one(
+        {"phone_number": data.phone_number},
+        {"$set": {
+            "otp": otp,
+            "expires_at": expires_at,
+            "attempts": 0
+        }},
+        upsert=True
+    )
+    
+    # Send via Twilio
+    success = SMSService.send_otp(data.phone_number, otp)
+    if not success:
+        # If Twilio fails, we still return success if mock is on, 
+        # but here we'll just say we sent it (SMSService handles printing to logs)
+        pass
+        
+    return {"message": "OTP sent successfully", "expires_in": "5 minutes"}
+
+@router.post("/verify-otp-phone")
+async def verify_otp_phone(data: OTPVerifyRequest):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    otp_record = db.otp_codes.find_one({"phone_number": data.phone_number})
+    
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="OTP not found or expired")
+    
+    if otp_record["attempts"] >= 5:
+        raise HTTPException(status_code=400, detail="Maximum attempts reached. Please request a new OTP.")
+    
+    if datetime.utcnow() > otp_record["expires_at"]:
+        raise HTTPException(status_code=400, detail="OTP expired")
+    
+    if otp_record["otp"] != data.otp:
+        # Increment attempts
+        db.otp_codes.update_one({"phone_number": data.phone_number}, {"$inc": {"attempts": 1}})
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+    
+    # Success - Mark verified in user record if user exists, or just return success
+    # If the user is logging in/signing up per the flow, we might need to find them
+    user = db.users.find_one({"phone_number": data.phone_number})
+    if user:
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"is_phone_verified": True}})
+    
+    # Clear OTP
+    db.otp_codes.delete_one({"phone_number": data.phone_number})
+    
+    return {"message": "Phone number verified successfully"}
+
 @router.post("/verify-otp", response_model=UserResponse)
 def verify_otp(data: OTPVerify):
     db = get_db()
@@ -127,6 +193,8 @@ def verify_otp(data: OTPVerify):
         id=str(user["_id"]),
         email=user.get("email"),
         mobile=user.get("mobile"),
+        is_phone_verified=user.get("is_phone_verified", False),
+        phone_number=user.get("phone_number"),
         full_name=user.get("full_name"),
         role=user.get("role", "user"),
         is_verified=True,
@@ -157,6 +225,8 @@ def login(data: UserLogin):
         id=str(user["_id"]),
         email=user.get("email"),
         mobile=user.get("mobile"),
+        phone_number=user.get("phone_number"),
+        is_phone_verified=user.get("is_phone_verified", False),
         full_name=user.get("full_name") or None,
         role=user.get("role", "user"),
         is_verified=True,

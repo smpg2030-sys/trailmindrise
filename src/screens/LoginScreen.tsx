@@ -23,6 +23,10 @@ export default function LoginScreen() {
   const [fullName, setFullName] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [isPhoneOtpSent, setIsPhoneOtpSent] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -40,7 +44,7 @@ export default function LoginScreen() {
     const isMobile = /^\d{10}$/.test(emailOrMobile.trim());
     const isEmail = emailOrMobile.includes("@");
 
-    if (!isMobile && !isEmail) {
+    if (!isMobile && !isEmail && mode !== "forgot-reset") {
       setMessage({ type: "error", text: "Please enter a valid Email or 10-digit Mobile Number." });
       setLoading(false);
       return;
@@ -57,7 +61,9 @@ export default function LoginScreen() {
         endpoint = "/auth/register";
         body = {
           password,
-          full_name: fullName || undefined
+          full_name: fullName || undefined,
+          phone_number: phoneNumber || undefined,
+          is_phone_verified: isPhoneVerified
         };
         if (isMobile) body.mobile = emailOrMobile;
         else body.email = emailOrMobile;
@@ -134,6 +140,54 @@ export default function LoginScreen() {
     }
   };
 
+  const handleSendPhoneOTP = async () => {
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      setMessage({ type: "error", text: "Enter a valid 10-digit phone number." });
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`${API_BASE}/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: phoneNumber }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to send OTP");
+      setIsPhoneOtpSent(true);
+      setMessage({ type: "success", text: "OTP sent to your mobile!" });
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPhoneOTP = async () => {
+    if (phoneOtp.length !== 6) {
+      setMessage({ type: "error", text: "Enter 6-digit OTP." });
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`${API_BASE}/auth/verify-otp-phone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: phoneNumber, otp: phoneOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Invalid OTP");
+      setIsPhoneVerified(true);
+      setMessage({ type: "success", text: "Phone verified successfully!" });
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
@@ -146,6 +200,58 @@ export default function LoginScreen() {
         </p>
 
         <form onSubmit={submit} className="space-y-4">
+          {(mode === "login" || mode === "register") && (
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Mobile Verification</label>
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  disabled={isPhoneVerified}
+                  className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                  placeholder="Enter mobile number"
+                />
+                {!isPhoneVerified && (
+                  <button
+                    type="button"
+                    onClick={handleSendPhoneOTP}
+                    disabled={loading || !phoneNumber}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm shadow-emerald-200"
+                  >
+                    Send OTP
+                  </button>
+                )}
+              </div>
+
+              {isPhoneOtpSent && !isPhoneVerified && (
+                <div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <input
+                    type="text"
+                    value={phoneOtp}
+                    onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                    placeholder="Enter 6-digit OTP"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyPhoneOTP}
+                    disabled={loading || phoneOtp.length !== 6}
+                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition"
+                  >
+                    Verify
+                  </button>
+                </div>
+              )}
+
+              {isPhoneVerified && (
+                <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs bg-emerald-50 p-2 rounded-lg">
+                  <span className="text-base">✅</span> Phone Verified
+                </div>
+              )}
+            </div>
+          )}
+
           {mode === "register" && (
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -162,7 +268,7 @@ export default function LoginScreen() {
 
           {(mode === "login" || mode === "register" || mode === "forgot-request" || mode === "forgot-reset") && (
             <div>
-              <label className="block text-sm font-medium mb-1">Email or Mobile</label>
+              <label className="block text-sm font-medium mb-1">Email or Username</label>
               <input
                 type="text"
                 value={emailOrMobile}
@@ -170,7 +276,7 @@ export default function LoginScreen() {
                 required
                 disabled={mode === "forgot-reset"}
                 className="input-field disabled:opacity-70"
-                placeholder="you@example.com or 9876543210"
+                placeholder="you@example.com or username"
               />
             </div>
           )}

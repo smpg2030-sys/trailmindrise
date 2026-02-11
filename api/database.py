@@ -10,8 +10,11 @@ _client: MongoClient | None = None
 def init_db(db):
     try:
         # Create TTL index on notifications collection for 24-hour expiry
-        # expireAfterSeconds: 86400 (24 hours)
         db.notifications.create_index("created_at", expireAfterSeconds=86400)
+        
+        # Create TTL index on otp_codes collection for 5-minute expiry
+        db.otp_codes.create_index("expires_at", expireAfterSeconds=0)
+        
         print("Initialized database indexes.")
     except Exception as e:
         print(f"Warning: Could not initialize database indexes: {e}")
