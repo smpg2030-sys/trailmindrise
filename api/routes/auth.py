@@ -130,7 +130,8 @@ def verify_otp(data: OTPVerify):
         role=user.get("role", "user"),
         is_verified=True,
         profile_pic=user.get("profile_pic"),
-        bio=user.get("bio")
+        bio=user.get("bio"),
+        created_at=ObjectId(user["_id"]).generation_time.isoformat()
     )
 
 @router.post("/login", response_model=UserResponse)
@@ -159,7 +160,8 @@ def login(data: UserLogin):
         role=user.get("role", "user"),
         is_verified=True,
         profile_pic=user.get("profile_pic"),
-        bio=user.get("bio")
+        bio=user.get("bio"),
+        created_at=ObjectId(user["_id"]).generation_time.isoformat()
     )
 @router.post("/forgot-password")
 async def forgot_password(data: PasswordResetRequest, background_tasks: BackgroundTasks):
@@ -245,7 +247,8 @@ def get_user(user_id: str):
         role=user.get("role", "user"),
         is_verified=user.get("is_verified", False),
         profile_pic=user.get("profile_pic"),
-        bio=user.get("bio")
+        bio=user.get("bio"),
+        created_at=ObjectId(user["_id"]).generation_time.isoformat()
     )
 
 class ProfilePicUpdate(BaseModel):
@@ -279,7 +282,8 @@ def update_profile_pic(user_id: str, data: ProfilePicUpdate):
         role=result.get("role", "user"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
-        bio=result.get("bio")
+        bio=result.get("bio"),
+        created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
 
 @router.delete("/user/{user_id}/profile-pic", response_model=UserResponse)
@@ -310,7 +314,8 @@ def delete_profile_pic(user_id: str):
         role=result.get("role", "user"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
-        bio=result.get("bio")
+        bio=result.get("bio"),
+        created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
 
 class BioUpdate(BaseModel):
@@ -344,7 +349,8 @@ def update_bio(user_id: str, data: BioUpdate):
         role=result.get("role", "user"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
-        bio=result.get("bio")
+        bio=result.get("bio"),
+        created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
@@ -394,5 +400,6 @@ def update_profile(user_id: str, data: UserUpdate):
         role=result.get("role", "user"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
-        bio=result.get("bio")
+        bio=result.get("bio"),
+        created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )

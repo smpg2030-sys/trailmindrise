@@ -33,6 +33,7 @@ class UserResponse(BaseModel):
     is_verified: bool = False
     profile_pic: str | None = None
     bio: str | None = None
+    created_at: str | None = None
 
 
 class PostCreate(BaseModel):

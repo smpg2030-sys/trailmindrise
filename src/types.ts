@@ -5,6 +5,7 @@ export interface User {
     role: string;
     is_verified?: boolean;
     profile_pic?: string | null;
+    created_at?: string | null;
 }
 
 export interface Post {

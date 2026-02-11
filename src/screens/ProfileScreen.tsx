@@ -5,6 +5,7 @@ import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera,
 import { Post, Video } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoPlayer from "../components/VideoPlayer";
+import GrowthTree from "../components/GrowthTree";
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "/api");
@@ -462,6 +463,11 @@ export default function ProfileScreen() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* MindRise Growth Tree Section */}
+        <div className="mb-8">
+          <GrowthTree createdAt={user.created_at} />
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-4">
