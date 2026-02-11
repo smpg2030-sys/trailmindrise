@@ -5,7 +5,7 @@ import random
 import string
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from database import get_db
-from models import UserRegister, UserLogin, UserResponse
+from models import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import BaseModel, EmailStr
 
@@ -134,7 +134,57 @@ def login(data: UserLogin):
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio")
     )
+@router.post("/forgot-password")
+async def forgot_password(data: PasswordResetRequest, background_tasks: BackgroundTasks):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    user = db.users.find_one({"email": data.email})
+    if not user:
+        # Don't reveal if user exists or not for security, but for now we'll just say "If email exists..."
+        return {"message": "If this email is registered, you will receive an OTP."}
+    
+    otp = generate_otp()
+    
+    # Store OTP in user doc (reusing otp field)
+    db.users.update_one({"email": data.email}, {"$set": {"otp": otp}})
+    
+    # Send Email
+    message = MessageSchema(
+        subject="MindRise Password Reset OTP",
+        recipients=[data.email],
+        body=f"Your password reset code is: {otp}",
+        subtype=MessageType.html
+    )
 
+    fm = FastMail(conf)
+    background_tasks.add_task(fm.send_message, message)
+    
+    return {"message": "OTP sent to email."}
+
+
+@router.post("/reset-password")
+def reset_password(data: PasswordResetConfirm):
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    user = db.users.find_one({"email": data.email})
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+        
+    if user.get("otp") != data.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+        
+    # Update password and clear OTP
+    new_hash = hash_password(data.new_password)
+    db.users.update_one(
+        {"email": data.email}, 
+        {"$set": {"password_hash": new_hash, "otp": None}}
+    )
+    
+    return {"message": "Password updated successfully"}
 @router.get("/user/{user_id}", response_model=UserResponse)
 def get_user(user_id: str):
     db = get_db()

@@ -17,10 +17,14 @@ export default function LoginScreen() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  const [mode, setMode] = useState<Mode>("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot-request" | "forgot-reset">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -33,11 +37,22 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
-      const body =
-        mode === "login"
-          ? { email, password }
-          : { email, password, full_name: fullName || undefined };
+      let endpoint = "";
+      let body = {};
+
+      if (mode === "login") {
+        endpoint = "/auth/login";
+        body = { email, password };
+      } else if (mode === "register") {
+        endpoint = "/auth/register";
+        body = { email, password, full_name: fullName || undefined };
+      } else if (mode === "forgot-request") {
+        endpoint = "/auth/forgot-password";
+        body = { email };
+      } else if (mode === "forgot-reset") {
+        endpoint = "/auth/reset-password";
+        body = { email, otp, new_password: newPassword };
+      }
 
       const res = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
@@ -56,31 +71,34 @@ export default function LoginScreen() {
       }
 
       if (mode === "login") {
-        // ✅ Save token if backend returns one
         if (data.token) {
           localStorage.setItem("token", data.token);
         }
-
         setUser({
           id: data.id,
           email: data.email,
           full_name: data.full_name ?? null,
         });
-
         navigate("/", { replace: true });
         return;
       }
 
-      // Registration success
-      setMessage({
-        type: "success",
-        text: "Code sent! Redirecting to verify...",
-      });
-      setTimeout(() => navigate("/verify", { state: { email } }), 1000);
+      if (mode === "register") {
+        setMessage({
+          type: "success",
+          text: "Code sent! Redirecting to verify...",
+        });
+        setTimeout(() => navigate("/verify", { state: { email } }), 1000);
+      } else if (mode === "forgot-request") {
+        setMessage({ type: "success", text: "OTP sent to your email." });
+        setMode("forgot-reset");
+      } else if (mode === "forgot-reset") {
+        setMessage({ type: "success", text: "Password updated! please login." });
+        setTimeout(() => setMode("login"), 2000);
+      }
 
     } catch (err: any) {
-      if (err.message.includes("Email not verified")) {
-        // Allow redirect to verify
+      if (err.message.includes("Email not verified") && mode === "login") {
         setMessage({
           type: "error",
           text: "Account not verified. Redirecting...",
@@ -92,7 +110,7 @@ export default function LoginScreen() {
           text: err.message || "Network error. Please try again.",
         });
       }
-      setPassword("");
+      if (mode === "login" || mode === "register") setPassword("");
     } finally {
       setLoading(false);
     }
@@ -103,7 +121,10 @@ export default function LoginScreen() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
         <h1 className="text-2xl font-bold text-center mb-1">MindRise</h1>
         <p className="text-center text-sm text-slate-500 mb-6">
-          {mode === "login" ? "Sign in to your account" : "Create an account"}
+          {mode === "login" && "Sign in to your account"}
+          {mode === "register" && "Create an account"}
+          {mode === "forgot-request" && "Reset your password"}
+          {mode === "forgot-reset" && "Enter OTP and new password"}
         </p>
 
         <form onSubmit={submit} className="space-y-4">
@@ -121,31 +142,95 @@ export default function LoginScreen() {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="input-field"
-              placeholder="you@example.com"
-            />
-          </div>
+          {(mode === "login" || mode === "register" || mode === "forgot-request" || mode === "forgot-reset") && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={mode === "forgot-reset"}
+                className="input-field disabled:opacity-70"
+                placeholder="you@example.com"
+              />
+            </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="input-field"
-              placeholder="••••••••"
-            />
-          </div>
+          {mode === "forgot-reset" && (
+            <div>
+              <label className="block text-sm font-medium mb-1">OTP Code</label>
+              <input
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                required
+                className="input-field"
+                placeholder="Enter 6-digit code"
+              />
+            </div>
+          )}
+
+          {(mode === "login" || mode === "register") && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="input-field pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? "👁️" : "👁️‍🗨️"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === "forgot-reset" && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  className="input-field pr-10"
+                  placeholder="New password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? "👁️" : "👁️‍🗨️"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === "login" && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setMode("forgot-request")}
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
 
           {message && (
             <div
@@ -163,18 +248,24 @@ export default function LoginScreen() {
             disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-green-400 to-green-600 disabled:opacity-50"
           >
-            {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Register"}
+            {loading ? "Please wait..." :
+              mode === "login" ? "Sign In" :
+                mode === "register" ? "Register" :
+                  mode === "forgot-request" ? "Send OTP" : "Reset Password"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setMode(mode === "login" ? "register" : "login")}
+            onClick={() => {
+              setMessage(null);
+              setMode("login");
+            }}
             className="text-sm text-slate-600 hover:text-green-600 font-medium"
           >
             {mode === "login"
-              ? "Don't have an account? Register"
-              : "Already have an account? Sign in"}
+              ? <span onClick={(e) => { e.stopPropagation(); setMode("register"); }}>Don't have an account? Register</span>
+              : "Back to Sign in"}
           </button>
         </div>
       </div>
