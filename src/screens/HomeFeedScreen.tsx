@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, Plus, Image as ImageIcon, Camera, Wand2, Video as VideoIcon } from "lucide-react";
+import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Post, Video, FriendRequest, AppNotification, CommunityStory } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
@@ -479,6 +479,11 @@ export default function HomeFeedScreen() {
                   onChange={(e) => setPostContent(e.target.value)}
                 />
 
+                <p className="mt-2 text-[10px] text-slate-400 font-medium flex items-center gap-1.5 px-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Note: All posts are reviewed by an admin before being published to the community.
+                </p>
+
                 {imagePreview && (
                   <div className="mt-4 relative group aspect-video rounded-2xl overflow-hidden border border-slate-200">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -496,12 +501,24 @@ export default function HomeFeedScreen() {
 
                 <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-6">
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => navigate("/camera", { state: { from: "post" } })}
-                      className="w-12 h-12 flex items-center justify-center rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all active:scale-95 group"
-                    >
-                      <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                    </button>
+                    <label className="w-12 h-12 flex items-center justify-center rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all active:scale-95 group cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSelectedFile(file);
+                            const reader = new FileReader();
+                            reader.onloadend = () => setImagePreview(reader.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <Camera className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                    </label>
                     <label className="w-12 h-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all active:scale-95 cursor-pointer">
                       <input
                         type="file"
@@ -517,9 +534,6 @@ export default function HomeFeedScreen() {
                           }
                         }}
                       />
-                      <Camera className="w-5 h-5" />
-                    </label>
-                    <label className="w-12 h-12 flex items-center justify-center rounded-2xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-all active:scale-95 cursor-pointer">
                       <ImageIcon className="w-5 h-5" />
                     </label>
                   </div>
