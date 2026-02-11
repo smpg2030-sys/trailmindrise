@@ -23,6 +23,57 @@ def configure_cloudinary():
 # Initial config attempt
 configure_cloudinary()
 
+@router.get("/upload-video/signature")
+def get_upload_signature():
+    if not CLOUDINARY_API_SECRET:
+        raise HTTPException(status_code=500, detail="Cloudinary credentials not configured.")
+    
+    import time
+    timestamp = int(time.time())
+    
+    params = {
+        "timestamp": timestamp,
+        "folder": "MindRise_Videos",
+    }
+    
+    signature = cloudinary.utils.api_sign_request(params, CLOUDINARY_API_SECRET)
+    
+    return {
+        "signature": signature,
+        "timestamp": timestamp,
+        "api_key": CLOUDINARY_API_KEY,
+        "cloud_name": CLOUDINARY_CLOUD_NAME,
+        "folder": "MindRise_Videos"
+    }
+
+@router.post("/upload-video/register")
+async def register_video(payload: dict):
+    video_url = payload.get("video_url")
+    user_id = payload.get("user_id")
+    caption = payload.get("caption", "")
+    
+    if not video_url or not user_id:
+        raise HTTPException(status_code=400, detail="Missing video_url or user_id")
+    
+    client = get_client()
+    db = client["MindRiseDB"]
+    collection = db["user_videos"]
+    
+    record = {
+        "user_id": user_id,
+        "video_url": video_url,
+        "caption": caption,
+        "status": "Pending",
+        "created_at": datetime.utcnow()
+    }
+    
+    result = collection.insert_one(record)
+    
+    return {
+        "success": True,
+        "videoId": str(result.inserted_id)
+    }
+
 @router.post("/upload-video")
 async def upload_video(
     file: UploadFile = File(...),

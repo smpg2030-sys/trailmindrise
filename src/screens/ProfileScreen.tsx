@@ -126,7 +126,7 @@ export default function ProfileScreen() {
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && user) {
       const file = e.target.files[0];
-      if (file.size > 100 * 1024 * 1024) { // Increased to 100MB for Cloudinary
+      if (file.size > 100 * 1024 * 1024) { // 100MB limit
         alert("Video file is too large. Max 100MB allowed.");
         return;
       }
@@ -135,30 +135,56 @@ export default function ProfileScreen() {
       try {
         const caption = prompt("Enter a caption for your video (optional):") || "";
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("user_id", user.id);
-        formData.append("caption", caption);
+        // 1. Get Signature from Backend
+        const sigRes = await fetch(`${API_BASE}/upload-video/signature`);
+        if (!sigRes.ok) throw new Error("Could not get upload signature");
+        const { signature, timestamp, api_key, cloud_name, folder } = await sigRes.json();
 
-        // Upload directly to the new standardized endpoint
-        const uploadRes = await fetch(`${API_BASE}/upload-video`, {
+        // 2. Upload directly to Cloudinary
+        const cloudFormData = new FormData();
+        cloudFormData.append("file", file);
+        cloudFormData.append("api_key", api_key);
+        cloudFormData.append("timestamp", timestamp.toString());
+        cloudFormData.append("signature", signature);
+        cloudFormData.append("folder", folder);
+
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`;
+        const cloudRes = await fetch(cloudinaryUrl, {
           method: "POST",
-          body: formData,
+          body: cloudFormData,
         });
 
-        if (!uploadRes.ok) {
-          const err = await uploadRes.json();
-          throw new Error(err.detail || "Upload failed");
+        if (!cloudRes.ok) {
+          const cloudErr = await cloudRes.json();
+          throw new Error(cloudErr.error?.message || "Cloudinary upload failed");
         }
 
-        const resData = await uploadRes.json();
+        const cloudData = await cloudRes.json();
+        const videoUrl = cloudData.secure_url;
 
-        if (resData.success) {
-          // Construct a video object for local state (may not have all fields yet, but enough for UI)
-          const newVideo = {
-            id: resData.videoId,
-            video_url: resData.videoUrl,
-            status: "pending" as "pending" | "approved" | "rejected",
+        // 3. Register metadata with our backend
+        const regRes = await fetch(`${API_BASE}/upload-video/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            video_url: videoUrl,
+            user_id: user.id,
+            caption: caption
+          }),
+        });
+
+        if (!regRes.ok) {
+          const err = await regRes.json();
+          throw new Error(err.detail || "Failed to register video metadata");
+        }
+
+        const regData = await regRes.json();
+
+        if (regData.success) {
+          const newVideo: Video = {
+            id: regData.videoId,
+            video_url: videoUrl,
+            status: "pending" as const,
             user_id: user.id,
             author_name: user.full_name || user.email?.split("@")[0] || "Me",
             created_at: new Date().toISOString()
@@ -166,9 +192,8 @@ export default function ProfileScreen() {
           setMyVideos(prev => [newVideo, ...prev]);
           alert("Video uploaded and sent for moderation! ✅");
         } else {
-          alert("Failed to upload video: " + (resData.message || "Unknown error"));
+          alert("Failed to upload video: " + (regData.message || "Unknown error"));
         }
-
       } catch (error: any) {
         console.error("Video upload error", error);
         alert(`Error uploading video: ${error.message || "Unknown error"}`);
