@@ -6,6 +6,21 @@ from datetime import datetime
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 
+@router.get("/", response_model=list[VideoResponse])
+def get_all_videos():
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database connection not established")
+    
+    # Return all approved videos worldwide
+    videos_cursor = db.videos.find().sort("created_at", -1)
+    
+    results = []
+    for doc in videos_cursor:
+        doc["id"] = str(doc["_id"])
+        results.append(doc)
+    return results
+
 @router.post("/", response_model=VideoResponse)
 def create_video(video: VideoCreate):
     db = get_db()

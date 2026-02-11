@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera, Video as VideoIcon, Upload } from "lucide-react";
 import { Post, Video } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
+import VideoPlayer from "../components/VideoPlayer";
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8001" : "/api");
@@ -574,12 +575,12 @@ export default function ProfileScreen() {
               key="videos"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="grid grid-cols-2 gap-3"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
             >
               {loadingVideos ? (
-                <div className="col-span-2 py-12 text-center text-slate-400">Loading videos...</div>
+                <div className="col-span-full py-12 text-center text-slate-400">Loading videos...</div>
               ) : myVideos.length === 0 ? (
-                <div className="col-span-2 py-16 text-center">
+                <div className="col-span-full py-16 text-center">
                   <VideoIcon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                   <p className="text-slate-500 font-bold">No videos yet</p>
                 </div>
@@ -587,25 +588,29 @@ export default function ProfileScreen() {
                 myVideos.map(video => (
                   <div key={video.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm relative group">
                     <div className="aspect-[9/16] bg-slate-900 flex items-center justify-center overflow-hidden">
-                      <video
-                        src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                        <VideoIcon className="w-10 h-10 text-white" />
-                      </div>
+                      {video.status === "approved" ? (
+                        <VideoPlayer
+                          src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
+                          className="w-full h-full"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-4 text-white/50 p-6 text-center">
+                          <VideoIcon className="w-10 h-10 opacity-20" />
+                          <p className="text-xs font-medium">Video is {video.status}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="p-2">
-                      <h4 className="text-[11px] font-bold text-slate-800 truncate mb-1">{video.title || "No Title"}</h4>
+                    <div className="p-3">
+                      <h4 className="text-xs font-bold text-slate-800 truncate mb-1">{video.title || "No Title"}</h4>
                       <div className="flex justify-between items-center">
                         {getVideoStatusBadge(video)}
-                        <button onClick={() => handleDeleteVideo(video.id)} className="p-1 text-slate-300 hover:text-rose-500">
-                          <Trash2 className="w-3.5 h-3.5" />
+                        <button onClick={() => handleDeleteVideo(video.id)} className="p-1.5 text-slate-300 hover:text-rose-500 rounded-full hover:bg-rose-50 transition-colors">
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                     {video.status === "rejected" && video.rejection_reason && (
-                      <div className="absolute top-2 left-2 right-2 bg-rose-500/90 backdrop-blur-sm p-2 rounded-lg text-white text-[9px] leading-tight">
+                      <div className="absolute top-2 left-2 right-2 bg-rose-500/90 backdrop-blur-md p-3 rounded-xl text-white text-[10px] font-medium leading-tight shadow-lg border border-white/20">
                         Rejected: {video.rejection_reason}
                       </div>
                     )}

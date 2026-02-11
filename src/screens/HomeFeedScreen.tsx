@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, Plus, Image as ImageIcon, Camera, Wand2 } from "lucide-react";
+import { Search, Bell, Plus, Image as ImageIcon, Camera, Wand2, Video as VideoIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { Post } from "../types";
+import { Post, Video } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
+import VideoPlayer from "../components/VideoPlayer";
 
-const TABS = ["All Posts", "Daily Quotes", "Gratitude"] as const;
+const TABS = ["All Posts", "Videos", "Daily Quotes", "Gratitude"] as const;
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8001" : "/api");
@@ -41,17 +42,24 @@ export default function HomeFeedScreen() {
   }, [user]);
 
   const [posts, setPosts] = useState<Post[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchPosts = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const url = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setPosts(data);
+      if (activeTab === "Videos") {
+        const res = await fetch(`${API_BASE}/videos/`);
+        const data = await res.json();
+        setVideos(data);
+      } else {
+        const url = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
+        const res = await fetch(url);
+        const data = await res.json();
+        setPosts(data);
+      }
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("Error fetching feed:", error);
     } finally {
       setLoading(false);
     }
@@ -71,13 +79,13 @@ export default function HomeFeedScreen() {
   };
 
   useEffect(() => {
-    fetchPosts();
+    fetchData();
     if (user) {
       fetchFriendRequests();
       const interval = setInterval(fetchFriendRequests, 30000); // Poll every 30s
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   useEffect(() => {
     const searchUsers = async () => {
@@ -124,7 +132,7 @@ export default function HomeFeedScreen() {
       });
       if (res.ok) {
         fetchFriendRequests();
-        fetchPosts(); // Refresh feed if accepted
+        fetchData(); // Refresh feed if accepted
         alert(`Request ${action}ed!`);
       }
     } catch (err) {
@@ -198,6 +206,7 @@ export default function HomeFeedScreen() {
       exit={{ opacity: 0 }}
       className="min-h-screen bg-[#f8fafc] pb-24"
     >
+      {/* Header ... */}
       <header className="sticky top-0 z-20 glass px-5 py-4 flex items-center justify-between border-b border-white/40 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative group">
@@ -210,7 +219,7 @@ export default function HomeFeedScreen() {
             </div>
           </div>
           <h1 className="text-lg font-bold text-slate-800 tracking-tight truncate max-w-[200px]">
-            Welcome, {user?.full_name || user?.email?.split("@")[0] || "Friend"}
+            {activeTab === "Videos" ? "Mind Reels" : `Welcome, ${user?.full_name || user?.email?.split("@")[0] || "Friend"}`}
           </h1>
         </div>
         <div className="flex items-center gap-3">
@@ -288,7 +297,43 @@ export default function HomeFeedScreen() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="w-8 h-8 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin"></div>
-            <p className="text-slate-400 font-medium">Loading moments...</p>
+            <p className="text-slate-400 font-medium">Loading feed...</p>
+          </div>
+        ) : activeTab === "Videos" ? (
+          <div className="grid grid-cols-1 gap-6">
+            {videos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <VideoIcon className="w-16 h-16 text-slate-200 mb-4" />
+                <p className="text-xl font-bold text-slate-700">No videos yet</p>
+              </div>
+            ) : (
+              videos.map((video, index) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group"
+                >
+                  <div className="p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs">
+                      {video.author_name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">{video.author_name}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">{new Date(video.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <h3 className="px-4 pb-3 font-bold text-slate-800">{video.title}</h3>
+                  <div className="aspect-[9/16] max-h-[600px] w-full bg-black">
+                    <VideoPlayer
+                      src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
+                      className="h-full"
+                    />
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         ) : posts.length === 0 ? (
           <motion.div

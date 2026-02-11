@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Post, User, Video } from "../types";
 import { Users, FileText, CheckCircle, XCircle, Video as VideoIcon } from "lucide-react";
+import VideoPlayer from "../components/VideoPlayer";
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8001" : "/api");
@@ -247,12 +248,11 @@ export default function AdminPanelScreen() {
                     </div>
                   </div>
                 </div>
-                <h3 className="font-bold text-slate-800 mb-2">{video.title || "Untitled Video"}</h3>
-                <div className="bg-slate-900 rounded-xl overflow-hidden aspect-video relative mb-4">
-                  <video
+                <h3 className="font-bold text-slate-800 mb-3 text-lg leading-tight">{video.title || "Untitled Video"}</h3>
+                <div className="bg-slate-900 rounded-2xl overflow-hidden aspect-[9/16] max-h-[500px] relative mb-6 border border-slate-100 shadow-inner">
+                  <VideoPlayer
                     src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
                     className="w-full h-full"
-                    controls
                   />
                 </div>
                 <div className="flex gap-2">
