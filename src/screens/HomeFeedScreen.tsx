@@ -215,6 +215,14 @@ export default function HomeFeedScreen() {
           </button>
           <button
             type="button"
+            onClick={() => setShowNewPost(true)}
+            className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            aria-label="Create Post"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
             onClick={() => setShowNotifications(true)}
             className="p-2.5 text-slate-600 relative hover:bg-slate-100 rounded-full transition-colors"
             aria-label="Notifications"
@@ -303,15 +311,6 @@ export default function HomeFeedScreen() {
           </AnimatePresence>
         )}
       </div>
-
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowNewPost(true)}
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-premium hover:bg-slate-800 transition-colors z-30"
-      >
-        <Plus className="w-7 h-7" />
-      </motion.button>
 
       <AnimatePresence>
         {showNewPost && (
@@ -476,7 +475,7 @@ export default function HomeFeedScreen() {
         )}
       </AnimatePresence>
 
-      {/* Notifications Modal can be similarly animated */}
+      {/* Notifications Modal */}
       {showNotifications && (
         <div
           className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
