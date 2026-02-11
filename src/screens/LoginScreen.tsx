@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const getApiBase = () => {
-  const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "/api");
+  const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8001" : "/api");
   if (base.startsWith("http")) return base;
   return window.location.origin + (base.startsWith("/") ? "" : "/") + base;
 };
@@ -11,7 +11,7 @@ const getApiBase = () => {
 const API_BASE = getApiBase();
 
 
-type Mode = "login" | "register";
+
 
 export default function LoginScreen() {
   const navigate = useNavigate();

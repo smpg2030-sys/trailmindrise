@@ -17,14 +17,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi import Request
+from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import traceback
+import sys
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print(f"Global Exception: {exc}")
-    traceback.print_exc()
+    if isinstance(exc, StarletteHTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail}
+        )
+    
+    try:
+        print(f"Global Exception: {exc}")
+        traceback.print_exc()
+    except:
+        pass
+
     return JSONResponse(
         status_code=500,
         content={
@@ -34,11 +46,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-from fastapi.staticfiles import StaticFiles
-from routes.upload import router as upload_router
-import os
-
-prefix = "/api" if os.getenv("VERCEL") else ""
+# Force /api prefix for consistency
+prefix = "/api"
 
 if os.getenv("VERCEL"):
     UPLOAD_DIR = "/tmp/uploads"
@@ -87,7 +96,11 @@ async def startup_event():
 
 @app.get(prefix + "/")
 def root():
-    return {"message": "MindRise API", "docs": "/docs"}
+    return {"message": "MindRise API", "docs": "/docs", "prefix": prefix}
+
+@app.get("/debug-prefix")
+def debug_prefix():
+    return {"prefix": prefix, "source": "backend/main.py"}
 
 
 if __name__ == "__main__":

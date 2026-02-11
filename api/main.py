@@ -1,11 +1,13 @@
-"""FastAPI app with MongoDB. Run: uvicorn main:app --reload"""
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
 from routes.posts import router as posts_router
 from routes.friends import router as friends_router
 from routes.videos import router as videos_router
+from routes.upload import router as upload_router
 
 app = FastAPI(title="MindRise API", version="1.0.0")
 
@@ -17,14 +19,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi import Request
+from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import traceback
+import sys
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print(f"Global Exception: {exc}")
-    traceback.print_exc()
+    if isinstance(exc, StarletteHTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail}
+        )
+    
+    try:
+        print(f"Global Exception: {exc}")
+        traceback.print_exc()
+    except:
+        pass
+
     return JSONResponse(
         status_code=500,
         content={
@@ -34,11 +48,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-from fastapi.staticfiles import StaticFiles
-from routes.upload import router as upload_router
-import os
-
-prefix = "/api" if os.getenv("VERCEL") else ""
+# Force /api prefix for consistency with frontend relative paths
+prefix = "/api"
 
 if os.getenv("VERCEL"):
     UPLOAD_DIR = "/tmp/uploads"
@@ -87,7 +98,11 @@ async def startup_event():
 
 @app.get(prefix + "/")
 def root():
-    return {"message": "MindRise API", "docs": "/docs"}
+    return {"message": "MindRise API", "docs": "/docs", "prefix": prefix}
+
+@app.get("/debug-prefix")
+def debug_prefix():
+    return {"prefix": prefix, "source": "api/main.py"}
 
 
 if __name__ == "__main__":
