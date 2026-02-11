@@ -73,7 +73,7 @@ app.include_router(posts_router, prefix=prefix)
 app.include_router(upload_router, prefix=prefix)
 app.include_router(friends_router, prefix=prefix)
 app.include_router(videos_router, prefix=prefix)
-app.include_router(news_router, prefix=prefix)
+app.include_router(news_router, prefix=prefix + "/news")
 
 
 @app.get(prefix + "/health")
