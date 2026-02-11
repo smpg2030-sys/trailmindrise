@@ -702,5 +702,3 @@ export default function HomeFeedScreen() {
     </motion.div>
   );
 }
-
-import { ArrowLeft } from "lucide-react";

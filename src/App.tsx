@@ -73,6 +73,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/support"
+          element={
+            <ProtectedRoute>
+              <TherapistSupportScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/"
           element={
             <ProtectedRoute>
