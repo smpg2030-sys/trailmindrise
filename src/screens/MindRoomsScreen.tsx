@@ -1,4 +1,3 @@
-import React from "react";
 import { Clock, Users } from "lucide-react";
 
 const TABS = ["Live Now", "Upcoming", "Guided", "Open"] as const;
@@ -11,22 +10,21 @@ const ROOMS = [
 
 export default function MindRoomsScreen() {
   return (
-    <div className="app-container min-h-screen bg-[#f8f9fa] pb-20">
-      <header className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Mind Rooms</h1>
-        <button type="button" className="p-1.5 text-slate-600" aria-label="Schedule">
+    <div className="min-h-screen bg-[#f8fafc] pb-24">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-100/50 px-4 py-4 flex items-center justify-between shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Mind Rooms</h1>
+        <button type="button" className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Schedule">
           <Clock className="w-5 h-5" />
         </button>
       </header>
 
-      <div className="flex gap-2 px-4 py-4 border-b border-slate-100 overflow-x-auto pb-2">
+      <div className="flex gap-2 px-4 py-4 bg-white/90 backdrop-blur-sm border-b border-slate-100/50 overflow-x-auto pb-3 no-scrollbar">
         {TABS.map((tab) => (
           <button
             key={tab}
             type="button"
-            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
-              tab === "Live Now" ? "bg-green-500 text-white" : "bg-white text-slate-600 border border-slate-200"
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${tab === "Live Now" ? "bg-green-500 text-white" : "bg-white text-slate-600 border border-slate-200"
+              }`}
           >
             {tab}
           </button>

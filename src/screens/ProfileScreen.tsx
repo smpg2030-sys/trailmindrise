@@ -427,7 +427,7 @@ export default function ProfileScreen() {
       exit={{ opacity: 0 }}
       className="w-full"
     >
-      <header className="sticky top-0 z-20 glass px-5 py-4 flex items-center justify-between border-b border-white/40 shadow-sm">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl px-4 py-4 flex items-center justify-between border-b border-slate-100/50 shadow-sm">
         <button
           type="button"
           onClick={() => setShowSettings(true)}
@@ -446,7 +446,7 @@ export default function ProfileScreen() {
         </button>
       </header>
 
-      <div className="p-5 pt-8">
+      <div className="p-4 pt-8">
         <div className="flex flex-col items-center text-center mb-8">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}

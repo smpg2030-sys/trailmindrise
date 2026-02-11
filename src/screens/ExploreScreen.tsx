@@ -65,10 +65,10 @@ export default function ExploreScreen() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white">
-      <header className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Explore</h1>
-        <button type="button" className="p-2 text-slate-600" aria-label="Notifications">
+    <div className="w-full min-h-screen bg-[#f8fafc]">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4 py-4 flex items-center justify-between shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Explore</h1>
+        <button type="button" className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Notifications">
           <Bell className="w-5 h-5" />
         </button>
       </header>

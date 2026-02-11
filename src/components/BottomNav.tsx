@@ -1,5 +1,4 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Home, Compass, MessageCircle, Zap, User } from "lucide-react";
 
 const navItems = [
@@ -11,21 +10,22 @@ const navItems = [
 ];
 
 export default function BottomNav() {
+  const location = useLocation();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
-      <div className="flex items-center justify-around py-3">
+    <nav className="fixed bottom-0 left-0 right-0 flex justify-center z-50 pointer-events-none">
+      <div className="w-full max-w-[640px] md:max-w-[768px] bg-white/90 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] px-4 pb-6 pt-3 flex items-center justify-around pointer-events-auto">
         {navItems.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}
             end={to === "/"}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center flex-1 py-1 text-xs transition ${isActive ? "text-green-600 font-medium" : "text-slate-500"
+              `flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${isActive ? "text-emerald-600 scale-110" : "text-slate-400 hover:text-slate-600"
               }`
             }
           >
-            <Icon className="w-5 h-5 mb-0.5" strokeWidth={2} />
-            <span>{label}</span>
+            <Icon className={`w-5 h-5 mb-1.5 transition-transform ${to === location.pathname ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
+            <span className="opacity-80">{label}</span>
           </NavLink>
         ))}
       </div>

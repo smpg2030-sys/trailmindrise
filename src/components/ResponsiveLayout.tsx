@@ -24,8 +24,8 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
             {isDesktop && <Sidebar />}
 
             {/* Main Content Area */}
-            <main className={`flex-1 flex flex-col items-center ${isDesktop ? "pb-0" : "pb-20"}`}>
-                <div className="w-full max-w-[768px] min-h-screen flex flex-col bg-white shadow-sm border-x border-slate-100">
+            <main className={`flex-1 flex flex-col items-center w-full ${isDesktop ? "pb-0" : "pb-24"}`}>
+                <div className="w-full max-w-[640px] md:max-w-[768px] min-h-screen flex flex-col bg-white shadow-xl shadow-slate-200/50 border-x border-slate-100/60 relative">
                     {children}
                 </div>
             </main>

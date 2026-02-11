@@ -240,7 +240,7 @@ export default function HomeFeedScreen() {
       className="w-full"
     >
       {/* Header ... */}
-      <header className="sticky top-0 z-20 glass px-5 py-4 flex items-center justify-between border-b border-white/40 shadow-sm">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl px-4 py-4 flex items-center justify-between border-b border-slate-100/50 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative group">
             <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold bg-gradient-to-br from-emerald-400 to-emerald-600 overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform duration-300">
@@ -291,7 +291,7 @@ export default function HomeFeedScreen() {
         </div>
       </header>
 
-      <div className="sticky top-[73px] z-10 bg-[#f8fafc]/95 backdrop-blur-sm px-4 py-3 border-b border-slate-100/50 overflow-x-auto no-scrollbar">
+      <div className="sticky top-[73px] z-10 bg-white/90 backdrop-blur-sm px-4 py-3 border-b border-slate-100/50 overflow-x-auto no-scrollbar">
         <div className="flex gap-2">
           {TABS.map((tab) => (
             <button
@@ -309,7 +309,7 @@ export default function HomeFeedScreen() {
         </div>
       </div>
 
-      <div className="px-4 pt-4 pb-20 space-y-5">
+      <div className="px-4 pt-4 pb-20 space-y-6">
         <AnimatePresence>
           {showProfileBanner && (
             <motion.div
