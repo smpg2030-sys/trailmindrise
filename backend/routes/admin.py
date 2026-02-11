@@ -139,28 +139,35 @@ def update_post_status(post_id: str, update: PostStatusUpdate, role: str):
 def get_videos(role: str, status: str = "all"):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    db = get_db()
-    if db is None:
-        raise HTTPException(status_code=503, detail="Database connection not established")
+    from database import get_client
+    client = get_client()
+    db_mindrise = client["mindrise"] # For users
+    db_videos = client["MindRiseDB"]
     
-    videos_cursor = []
+    query = {}
     if status == "approved":
-        videos_cursor = db.videos.find().sort("created_at", -1)
-    elif status == "pending" or status == "rejected":
-        videos_cursor = db.pending_videos.find({"status": status}).sort("created_at", -1)
-    else:  # status == "all"
-        approved = list(db.videos.find())
-        pending_rejected = list(db.pending_videos.find())
-        combined = approved + pending_rejected
-        combined.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-        videos_cursor = combined
+        query = {"status": {"$in": ["approved", "Approved"]}}
+    elif status == "pending":
+        query = {"status": {"$in": ["pending", "Pending"]}}
+    elif status == "rejected":
+        query = {"status": {"$in": ["rejected", "Rejected"]}}
+        
+    videos_cursor = db_videos.user_videos.find(query).sort("created_at", -1)
         
     results = []
     for doc in videos_cursor:
         doc["id"] = str(doc["_id"])
-        user = db.users.find_one({"_id": ObjectId(doc["user_id"])})
+        # Fetch author email from the main mindrise db users collection
+        user = db_mindrise.users.find_one({"_id": ObjectId(doc["user_id"])})
         if user:
             doc["author_email"] = user.get("email")
+            if "author_name" not in doc:
+                doc["author_name"] = user.get("full_name") or user.get("email").split("@")[0]
+        
+        # Lowercase status for frontend consistency
+        if "status" in doc:
+            doc["status"] = doc["status"].lower()
+            
         results.append(doc)
     return results
 
@@ -168,38 +175,24 @@ def get_videos(role: str, status: str = "all"):
 def update_video_status(video_id: str, update: PostStatusUpdate, role: str):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    db = get_db()
-    if db is None:
-        raise HTTPException(status_code=503, detail="Database connection not established")
-        
-    if update.status == "approved":
-        video = db.pending_videos.find_one({"_id": ObjectId(video_id)})
-        if not video:
-            already_approved = db.videos.find_one({"_id": ObjectId(video_id)})
-            if already_approved:
-                return {"message": "Video already approved"}
-            raise HTTPException(status_code=404, detail="Video not found in pending")
-        
-        video["status"] = "approved"
-        db.videos.insert_one(video)
-        db.pending_videos.delete_one({"_id": ObjectId(video_id)})
-        return {"message": "Video approved and visible on user profile"}
+    from database import get_client
+    client = get_client()
+    db = client["MindRiseDB"]
     
-    else:  # rejected
-        result = db.pending_videos.update_one(
-            {"_id": ObjectId(video_id)},
-            {"$set": {"status": "rejected", "rejection_reason": update.rejection_reason}}
-        )
+    # Map lowercase status to the requested DB format if needed
+    # (Approved/Rejected/Pending)
+    db_status = update.status.capitalize() 
+    
+    result = db.user_videos.update_one(
+        {"_id": ObjectId(video_id)},
+        {"$set": {
+            "status": db_status,
+            "rejection_reason": update.rejection_reason,
+            "updated_at": datetime.utcnow().isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Video not found")
         
-        if result.matched_count == 0:
-            video = db.videos.find_one({"_id": ObjectId(video_id)})
-            if video:
-                video["status"] = "rejected"
-                video["rejection_reason"] = update.rejection_reason
-                db.pending_videos.insert_one(video)
-                db.videos.delete_one({"_id": ObjectId(video_id)})
-                return {"message": "Video approval revoked and rejected"}
-            else:
-                raise HTTPException(status_code=404, detail="Video not found in pending or approved")
-            
-        return {"message": "Video rejected"}
+    return {"message": f"Video {update.status} successfully"}

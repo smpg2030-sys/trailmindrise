@@ -26,6 +26,7 @@ export interface Video {
     author_name: string;
     author_email?: string;
     title?: string;
+    caption?: string;
     video_url: string;
     status: "pending" | "approved" | "rejected";
     created_at: string;

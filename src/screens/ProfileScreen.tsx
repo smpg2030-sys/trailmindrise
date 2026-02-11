@@ -119,47 +119,40 @@ export default function ProfileScreen() {
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && user) {
       const file = e.target.files[0];
-      if (file.size > 50 * 1024 * 1024) {
-        alert("Video file is too large. Max 50MB allowed.");
+      if (file.size > 100 * 1024 * 1024) { // Increased to 100MB for Cloudinary
+        alert("Video file is too large. Max 100MB allowed.");
         return;
       }
 
       setIsUploadingVideo(true);
       try {
+        const caption = prompt("Enter a caption for your video (optional):") || "";
+
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("user_id", user.id);
+        formData.append("caption", caption);
 
-        const uploadRes = await fetch(`${API_BASE}/upload/`, {
+        // Upload directly to the new Cloudinary endpoint
+        const uploadRes = await fetch(`${API_BASE}/upload/video`, {
           method: "POST",
           body: formData,
         });
 
-        if (!uploadRes.ok) throw new Error("Upload failed");
-        const { url } = await uploadRes.json();
-
-        const videoTitle = prompt("Enter a title for your video:") || "Untitled Video";
-
-        const res = await fetch(`${API_BASE}/videos/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: videoTitle,
-            video_url: url,
-            user_id: user.id,
-            author_name: user.full_name || user.email.split("@")[0]
-          }),
-        });
-
-        if (res.ok) {
-          const newVideo = await res.json();
-          setMyVideos(prev => [newVideo, ...prev]);
-          alert("Video uploaded and sent for moderation!");
-        } else {
-          alert("Failed to save video details");
+        if (!uploadRes.ok) {
+          const err = await uploadRes.text();
+          throw new Error(err || "Upload failed");
         }
-      } catch (error) {
+
+        const newVideo = await uploadRes.json();
+
+        // Backend now handles database insertion, so we just update the local state
+        setMyVideos(prev => [newVideo, ...prev]);
+        alert("Video uploaded to Cloudinary and sent for moderation!");
+
+      } catch (error: any) {
         console.error("Video upload error", error);
-        alert("Error uploading video");
+        alert(`Error uploading video: ${error.message || "Unknown error"}`);
       } finally {
         setIsUploadingVideo(false);
       }
