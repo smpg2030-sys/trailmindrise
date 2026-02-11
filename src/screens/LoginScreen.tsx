@@ -62,12 +62,10 @@ export default function LoginScreen() {
         body = {
           password,
           full_name: fullName || undefined,
-          phone_number: phoneNumber || undefined,
+          mobile: phoneNumber || (isMobile ? emailOrMobile : undefined),
+          email: !isMobile ? emailOrMobile : undefined,
           is_phone_verified: isPhoneVerified
         };
-        if (isMobile) body.mobile = emailOrMobile;
-        else body.email = emailOrMobile;
-
       } else if (mode === "forgot-request") {
         endpoint = "/auth/forgot-password";
         body = { email: emailOrMobile }; // Backend handles it
@@ -200,7 +198,7 @@ export default function LoginScreen() {
         </p>
 
         <form onSubmit={submit} className="space-y-4">
-          {(mode === "login" || mode === "register") && (
+          {(mode === "forgot-request" || mode === "forgot-reset") && (
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Mobile Verification</label>
               <div className="flex gap-2">
@@ -253,22 +251,76 @@ export default function LoginScreen() {
           )}
 
           {mode === "register" && (
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Full name
-              </label>
-              <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="input-field"
-                placeholder="Your name"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Full name
+                </label>
+                <input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="input-field"
+                  placeholder="Your name"
+                />
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Mobile Verification (Optional)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    disabled={isPhoneVerified}
+                    className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                    placeholder="Enter mobile number"
+                  />
+                  {!isPhoneVerified && (
+                    <button
+                      type="button"
+                      onClick={handleSendPhoneOTP}
+                      disabled={loading || !phoneNumber}
+                      className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm shadow-emerald-200"
+                    >
+                      Send OTP
+                    </button>
+                  )}
+                </div>
+
+                {isPhoneOtpSent && !isPhoneVerified && (
+                  <div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <input
+                      type="text"
+                      value={phoneOtp}
+                      onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                      placeholder="Enter 6-digit OTP"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyPhoneOTP}
+                      disabled={loading || phoneOtp.length !== 6}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                )}
+
+                {isPhoneVerified && (
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs bg-emerald-50 p-2 rounded-lg">
+                    <span className="text-base">✅</span> Phone Verified
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {(mode === "login" || mode === "register" || mode === "forgot-request" || mode === "forgot-reset") && (
             <div>
-              <label className="block text-sm font-medium mb-1">Email or Username</label>
+              <label className="block text-sm font-medium mb-1">
+                {mode === "register" ? "Email Address" : "Email or Mobile"}
+              </label>
               <input
                 type="text"
                 value={emailOrMobile}
@@ -276,7 +328,7 @@ export default function LoginScreen() {
                 required
                 disabled={mode === "forgot-reset"}
                 className="input-field disabled:opacity-70"
-                placeholder="you@example.com or username"
+                placeholder={mode === "register" ? "you@example.com" : "you@example.com or mobile"}
               />
             </div>
           )}

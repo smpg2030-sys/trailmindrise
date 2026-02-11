@@ -56,7 +56,8 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     existing_user = None
     if data.email:
         existing_user = users.find_one({"email": data.email})
-    elif data.mobile:
+    
+    if not existing_user and data.mobile:
         existing_user = users.find_one({"mobile": data.mobile})
     
     if existing_user:
