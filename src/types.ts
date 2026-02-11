@@ -19,3 +19,15 @@ export interface Post {
     rejection_reason?: string;
     author_profile_pic?: string | null;
 }
+
+export interface Video {
+    id: string;
+    user_id: string;
+    author_name: string;
+    author_email?: string;
+    title?: string;
+    video_url: string;
+    status: "pending" | "approved" | "rejected";
+    created_at: string;
+    rejection_reason?: string;
+}

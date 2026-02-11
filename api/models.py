@@ -51,3 +51,18 @@ class PostResponse(BaseModel):
     status: str  # "pending", "approved", "rejected"
     created_at: str
     rejection_reason: str | None = None
+
+class VideoCreate(BaseModel):
+    title: str | None = None
+    video_url: str
+
+class VideoResponse(BaseModel):
+    id: str
+    user_id: str
+    author_name: str
+    author_email: str | None = None
+    title: str | None = None
+    video_url: str
+    status: str  # "pending", "approved", "rejected"
+    created_at: str
+    rejection_reason: str | None = None

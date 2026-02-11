@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera } from "lucide-react";
-import { Post } from "../types";
+import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera, Video as VideoIcon, Upload } from "lucide-react";
+import { Post, Video } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 
 const getApiBase = () => {
@@ -17,10 +17,13 @@ export default function ProfileScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, setUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<"posts" | "saved">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "saved" | "videos">("posts");
   const [showSettings, setShowSettings] = useState(false);
   const [myPosts, setMyPosts] = useState<Post[]>([]);
+  const [myVideos, setMyVideos] = useState<Video[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioDraft, setBioDraft] = useState(user?.bio || "");
   const [isSavingBio, setIsSavingBio] = useState(false);
@@ -40,17 +43,15 @@ export default function ProfileScreen() {
   useEffect(() => {
     if ((location.state as any)?.openEdit) {
       setIsEditingDetails(true);
-      // Clear the state to prevent reopening on subsequent renders/refreshes if we want, 
-      // but strictly speaking, we just want to open it once. 
-      // Replace history to remove state is good practice.
       navigate(".", { replace: true, state: {} });
     }
-  }, [location]);
+  }, [location, navigate]);
 
   useEffect(() => {
     if (user?.id) {
       refreshUserRole();
       fetchMyPosts();
+      fetchMyVideos();
     }
   }, [user?.id]);
 
@@ -83,6 +84,21 @@ export default function ProfileScreen() {
     }
   };
 
+  const fetchMyVideos = async () => {
+    setLoadingVideos(true);
+    try {
+      const res = await fetch(`${API_BASE}/videos/my?user_id=${user?.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMyVideos(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch my videos", error);
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
   const handleDeletePost = async (postId: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
     try {
@@ -96,6 +112,72 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error("Error deleting post", error);
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && user) {
+      const file = e.target.files[0];
+      if (file.size > 50 * 1024 * 1024) {
+        alert("Video file is too large. Max 50MB allowed.");
+        return;
+      }
+
+      setIsUploadingVideo(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadRes = await fetch(`${API_BASE}/upload/`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) throw new Error("Upload failed");
+        const { url } = await uploadRes.json();
+
+        const videoTitle = prompt("Enter a title for your video:") || "Untitled Video";
+
+        const res = await fetch(`${API_BASE}/videos/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: videoTitle,
+            video_url: url,
+            user_id: user.id,
+            author_name: user.full_name || user.email.split("@")[0]
+          }),
+        });
+
+        if (res.ok) {
+          const newVideo = await res.json();
+          setMyVideos(prev => [newVideo, ...prev]);
+          alert("Video uploaded and sent for moderation!");
+        } else {
+          alert("Failed to save video details");
+        }
+      } catch (error) {
+        console.error("Video upload error", error);
+        alert("Error uploading video");
+      } finally {
+        setIsUploadingVideo(false);
+      }
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string) => {
+    if (!confirm("Are you sure you want to delete this video?")) return;
+    try {
+      const res = await fetch(`${API_BASE}/videos/${videoId}?user_id=${user?.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setMyVideos(prev => prev.filter(v => v.id !== videoId));
+      } else {
+        alert("Failed to delete video");
+      }
+    } catch (error) {
+      console.error("Error deleting video", error);
     }
   };
 
@@ -215,8 +297,18 @@ export default function ProfileScreen() {
     }
   };
 
-  if (!user) return null;
+  const getVideoStatusBadge = (video: Video) => {
+    switch (video.status) {
+      case "approved":
+        return <span className="px-2 py-0.5 bg-green-100/50 text-green-700 text-[9px] font-bold uppercase rounded-lg border border-green-200">Approved</span>;
+      case "rejected":
+        return <span className="px-2 py-0.5 bg-rose-100/50 text-rose-700 text-[9px] font-bold uppercase rounded-lg border border-rose-200">Rejected</span>;
+      default:
+        return <span className="px-2 py-0.5 bg-amber-100/50 text-amber-700 text-[9px] font-bold uppercase rounded-lg border border-amber-200">Pending</span>;
+    }
+  };
 
+  if (!user) return null;
   const isAdmin = user?.role === "admin";
 
   return (
@@ -336,18 +428,18 @@ export default function ProfileScreen() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
             <p className="text-2xl font-bold text-slate-800">{myPosts.length}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Posts</p>
           </div>
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-2xl shadow-lg shadow-emerald-200 text-center text-white transform scale-105">
-            <p className="text-2xl font-bold">12</p>
-            <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider mt-1">Streak</p>
+            <p className="text-2xl font-bold text-white">{myVideos.length}</p>
+            <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider mt-1">Videos</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-            <p className="text-2xl font-bold text-slate-800">0</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Saved</p>
+            <p className="text-2xl font-bold text-slate-800">12</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Streak</p>
           </div>
         </div>
 
@@ -363,6 +455,14 @@ export default function ProfileScreen() {
           </motion.button>
         )}
 
+        <div className="mb-8">
+          <label className={`w-full py-4 rounded-2xl font-bold text-slate-700 bg-white border-2 border-dashed border-slate-300 flex items-center justify-center gap-2 cursor-pointer hover:border-slate-800 hover:bg-slate-50 transition-all ${isUploadingVideo ? 'opacity-50 pointer-events-none' : ''}`}>
+            <input type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+            <Upload className="w-5 h-5" />
+            {isUploadingVideo ? "Uploading..." : "Upload New Video"}
+          </label>
+        </div>
+
         <div className="flex mb-6 bg-slate-100/50 p-1.5 rounded-xl">
           <button
             type="button"
@@ -373,7 +473,18 @@ export default function ProfileScreen() {
               }`}
           >
             <Grid className="w-4 h-4" />
-            My Posts
+            Posts
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("videos")}
+            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === "videos"
+              ? "bg-white text-slate-800 shadow-sm"
+              : "text-slate-400 hover:text-slate-600"
+              }`}
+          >
+            <VideoIcon className="w-4 h-4" />
+            Videos
           </button>
           <button
             type="button"
@@ -453,6 +564,52 @@ export default function ProfileScreen() {
                       </div>
                     )}
                   </motion.div>
+                ))
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === "videos" && (
+            <motion.div
+              key="videos"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="grid grid-cols-2 gap-3"
+            >
+              {loadingVideos ? (
+                <div className="col-span-2 py-12 text-center text-slate-400">Loading videos...</div>
+              ) : myVideos.length === 0 ? (
+                <div className="col-span-2 py-16 text-center">
+                  <VideoIcon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                  <p className="text-slate-500 font-bold">No videos yet</p>
+                </div>
+              ) : (
+                myVideos.map(video => (
+                  <div key={video.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm relative group">
+                    <div className="aspect-[9/16] bg-slate-900 flex items-center justify-center overflow-hidden">
+                      <video
+                        src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                        <VideoIcon className="w-10 h-10 text-white" />
+                      </div>
+                    </div>
+                    <div className="p-2">
+                      <h4 className="text-[11px] font-bold text-slate-800 truncate mb-1">{video.title || "No Title"}</h4>
+                      <div className="flex justify-between items-center">
+                        {getVideoStatusBadge(video)}
+                        <button onClick={() => handleDeleteVideo(video.id)} className="p-1 text-slate-300 hover:text-rose-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    {video.status === "rejected" && video.rejection_reason && (
+                      <div className="absolute top-2 left-2 right-2 bg-rose-500/90 backdrop-blur-sm p-2 rounded-lg text-white text-[9px] leading-tight">
+                        Rejected: {video.rejection_reason}
+                      </div>
+                    )}
+                  </div>
                 ))
               )}
             </motion.div>
@@ -547,7 +704,6 @@ export default function ProfileScreen() {
         )}
       </AnimatePresence>
 
-      {/* Account Details Modal (New) */}
       <AnimatePresence>
         {isEditingDetails && (
           <motion.div
@@ -565,7 +721,12 @@ export default function ProfileScreen() {
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="text-xl font-bold mb-4 text-slate-800 text-center">Edit Profile</h2>
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <form
+                onSubmit={(e) => {
+                  handleUpdateProfile(e);
+                }}
+                className="space-y-4"
+              >
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
                   <input

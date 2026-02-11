@@ -5,6 +5,7 @@ from routes.auth import router as auth_router
 from routes.admin import router as admin_router
 from routes.posts import router as posts_router
 from routes.friends import router as friends_router
+from routes.videos import router as videos_router
 
 app = FastAPI(title="MindRise API", version="1.0.0")
 
@@ -39,13 +40,26 @@ import os
 
 prefix = "/api" if os.getenv("VERCEL") else ""
 
-app.mount("/static", StaticFiles(directory="uploads"), name="static")
+if os.getenv("VERCEL"):
+    UPLOAD_DIR = "/tmp/uploads"
+else:
+    UPLOAD_DIR = "uploads"
+
+if not os.path.exists(UPLOAD_DIR):
+    try:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+    except:
+        pass # Ignore if cannot create
+
+if os.path.exists(UPLOAD_DIR):
+    app.mount("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
 
 app.include_router(auth_router, prefix=prefix)
 app.include_router(admin_router, prefix=prefix)
 app.include_router(posts_router, prefix=prefix)
 app.include_router(upload_router, prefix=prefix)
 app.include_router(friends_router, prefix=prefix)
+app.include_router(videos_router, prefix=prefix)
 
 
 @app.get(prefix + "/health")

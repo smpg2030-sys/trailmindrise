@@ -1,6 +1,77 @@
 from fastapi import APIRouter, HTTPException
 from database import get_db
-from models import UserResponse, PostResponse
+from models import UserResponse, PostResponse, VideoResponse
+
+# ... (rest of the file remains same until the end)
+
+@router.get("/videos", response_model=List[VideoResponse])
+def get_videos(role: str, status: str = "all"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database connection not established")
+    
+    videos_cursor = []
+    if status == "approved":
+        videos_cursor = db.videos.find().sort("created_at", -1)
+    elif status == "pending" or status == "rejected":
+        videos_cursor = db.pending_videos.find({"status": status}).sort("created_at", -1)
+    else:  # status == "all"
+        approved = list(db.videos.find())
+        pending_rejected = list(db.pending_videos.find())
+        combined = approved + pending_rejected
+        combined.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        videos_cursor = combined
+        
+    results = []
+    for doc in videos_cursor:
+        doc["id"] = str(doc["_id"])
+        user = db.users.find_one({"_id": ObjectId(doc["user_id"])})
+        if user:
+            doc["author_email"] = user.get("email")
+        results.append(doc)
+    return results
+
+@router.put("/videos/{video_id}/status")
+def update_video_status(video_id: str, update: PostStatusUpdate, role: str):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database connection not established")
+        
+    if update.status == "approved":
+        video = db.pending_videos.find_one({"_id": ObjectId(video_id)})
+        if not video:
+            already_approved = db.videos.find_one({"_id": ObjectId(video_id)})
+            if already_approved:
+                return {"message": "Video already approved"}
+            raise HTTPException(status_code=404, detail="Video not found in pending")
+        
+        video["status"] = "approved"
+        db.videos.insert_one(video)
+        db.pending_videos.delete_one({"_id": ObjectId(video_id)})
+        return {"message": "Video approved and visible on user profile"}
+    
+    else:  # rejected
+        result = db.pending_videos.update_one(
+            {"_id": ObjectId(video_id)},
+            {"$set": {"status": "rejected", "rejection_reason": update.rejection_reason}}
+        )
+        
+        if result.matched_count == 0:
+            video = db.videos.find_one({"_id": ObjectId(video_id)})
+            if video:
+                video["status"] = "rejected"
+                video["rejection_reason"] = update.rejection_reason
+                db.pending_videos.insert_one(video)
+                db.videos.delete_one({"_id": ObjectId(video_id)})
+                return {"message": "Video approval revoked and rejected"}
+            else:
+                raise HTTPException(status_code=404, detail="Video not found in pending or approved")
+            
+        return {"message": "Video rejected"}
 from typing import List
 from bson import ObjectId
 from pydantic import BaseModel

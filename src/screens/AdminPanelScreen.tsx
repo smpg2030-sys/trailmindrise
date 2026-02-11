@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Users, FileText, CheckCircle, XCircle, AlertCircle, History, Filter } from "lucide-react";
-import { Post, User } from "../types";
+import { Post, User, Video } from "../types";
+import { Users, FileText, CheckCircle, XCircle, AlertCircle, History, Filter, Video as VideoIcon } from "lucide-react";
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "/api");
@@ -17,9 +17,10 @@ export default function AdminPanelScreen() {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [stats, setStats] = useState({ total_users: 0, pending_moderation: 0, email_users: 0, mobile_users: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"users" | "pending" | "history">("pending");
+  const [activeTab, setActiveTab] = useState<"users" | "pending" | "history" | "videos">("pending");
   const [historyFilter, setHistoryFilter] = useState<"all" | "approved" | "rejected">("all");
 
   useEffect(() => {
@@ -30,7 +31,6 @@ export default function AdminPanelScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      // Always fetch stats
       const statsRes = await fetch(`${API_BASE}/admin/stats?role=${user.role}`);
       if (statsRes.ok) setStats(await statsRes.json());
 
@@ -40,14 +40,15 @@ export default function AdminPanelScreen() {
       } else if (activeTab === "pending") {
         const postsRes = await fetch(`${API_BASE}/admin/posts?status=pending&role=${user.role}`);
         if (postsRes.ok) setPosts(await postsRes.json());
+      } else if (activeTab === "videos") {
+        const videosRes = await fetch(`${API_BASE}/admin/videos?status=pending&role=${user.role}`);
+        if (videosRes.ok) setVideos(await videosRes.json());
       } else if (activeTab === "history") {
         const statusParam = historyFilter === "all" ? "all" : historyFilter;
-        // In a real app, "all" might exclude pending, but here we just show what API returns
-        // Our API returns all if status is "all"
+        // Fetch both posts and videos if we want combined history, but for now just posts
         const postsRes = await fetch(`${API_BASE}/admin/posts?status=${statusParam}&role=${user.role}`);
         if (postsRes.ok) {
           let data = await postsRes.json();
-          // Filter out pending from history if we want
           if (historyFilter === "all") {
             data = data.filter((p: Post) => p.status !== "pending");
           }
@@ -65,7 +66,7 @@ export default function AdminPanelScreen() {
     let reason = "";
     if (status === "rejected") {
       reason = prompt("Enter rejection reason (optional):") || "";
-      if (reason === null) return; // Cancelled
+      if (reason === null) return;
     }
 
     try {
@@ -76,12 +77,10 @@ export default function AdminPanelScreen() {
       });
 
       if (res.ok) {
-        // Remove from list if in pending tab
         if (activeTab === "pending") {
           setPosts(prev => prev.filter(p => p.id !== postId));
           setStats(prev => ({ ...prev, pending_moderation: Math.max(0, prev.pending_moderation - 1) }));
         } else {
-          // Refresh data if in history
           fetchData();
         }
       } else {
@@ -90,6 +89,31 @@ export default function AdminPanelScreen() {
       }
     } catch (error) {
       console.error("Error updating post", error);
+    }
+  };
+
+  const handleVideoModeration = async (videoId: string, status: "approved" | "rejected") => {
+    let reason = "";
+    if (status === "rejected") {
+      reason = prompt("Enter rejection reason (optional):") || "";
+      if (reason === null) return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/videos/${videoId}/status?role=${user?.role}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, rejection_reason: reason })
+      });
+
+      if (res.ok) {
+        setVideos(prev => prev.filter(v => v.id !== videoId));
+      } else {
+        const errorText = await res.text();
+        alert(`Failed to update video status: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Error updating video", error);
     }
   };
 
@@ -128,7 +152,13 @@ export default function AdminPanelScreen() {
           onClick={() => setActiveTab("pending")}
           className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "pending" ? "border-b-2 border-amber-500 text-amber-600" : "text-slate-500"}`}
         >
-          Pending
+          Pending Posts
+        </button>
+        <button
+          onClick={() => setActiveTab("videos")}
+          className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "videos" ? "border-b-2 border-purple-500 text-purple-600" : "text-slate-500"}`}
+        >
+          Videos
         </button>
         <button
           onClick={() => setActiveTab("history")}
@@ -193,6 +223,54 @@ export default function AdminPanelScreen() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      ) : activeTab === "videos" ? (
+        <div className="space-y-4">
+          {videos.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
+              <VideoIcon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+              <p className="text-slate-500">No videos pending moderation.</p>
+            </div>
+          ) : (
+            videos.map(video => (
+              <div key={video.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs uppercase">
+                      {video.author_name ? video.author_name[0] : "?"}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{video.author_name}</p>
+                      <p className="text-xs text-slate-500">{video.author_email}</p>
+                      <p className="text-xs text-slate-400">{new Date(video.created_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+                <h3 className="font-bold text-slate-800 mb-2">{video.title || "Untitled Video"}</h3>
+                <div className="bg-slate-900 rounded-xl overflow-hidden aspect-video relative mb-4">
+                  <video
+                    src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
+                    className="w-full h-full"
+                    controls
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleVideoModeration(video.id, "approved")}
+                    className="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Approve
+                  </button>
+                  <button
+                    onClick={() => handleVideoModeration(video.id, "rejected")}
+                    className="flex-1 bg-red-50 text-red-700 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" /> Reject
+                  </button>
+                </div>
+              </div>
+            ))
           )}
         </div>
       ) : (
