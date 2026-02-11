@@ -17,7 +17,7 @@ def get_all_videos():
     db_videos = client["MindRiseDB"]
     
     # Fetch approved videos sorted by created_at descending
-    videos_cursor = db_videos.user_videos.find({"status": {"$in": ["approved", "Approved"]}}).sort("created_at", -1)
+    videos_cursor = db_videos.user_videos.find({"status": "approved"}).sort("created_at", -1)
     
     results = []
     for doc in videos_cursor:
@@ -119,7 +119,7 @@ def get_user_videos(user_id: str):
     # Return only approved videos for the profile view
     videos_cursor = db_videos.user_videos.find({
         "user_id": user_id, 
-        "status": {"$in": ["Approved", "approved"]}
+        "status": "approved"
     }).sort("created_at", -1)
     
     results = []

@@ -160,7 +160,7 @@ def update_video_status(video_id: str, update: PostStatusUpdate, role: str):
         raise HTTPException(status_code=403, detail="Admin access required")
     client = get_client()
     db = client["MindRiseDB"]
-    db_status = update.status.capitalize() 
+    db_status = update.status.lower() 
     result = db.user_videos.update_one(
         {"_id": ObjectId(video_id)},
         {"$set": {
@@ -189,7 +189,7 @@ def approve_video_standard(payload: dict, role: str = "admin"):
     result = db.user_videos.update_one(
         {"_id": ObjectId(video_id)},
         {"$set": {
-            "status": status.capitalize(),
+            "status": status.lower(),
             "rejection_reason": rejection_reason,
             "updated_at": datetime.utcnow().isoformat()
         }}
