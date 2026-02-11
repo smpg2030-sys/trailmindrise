@@ -9,7 +9,7 @@ import VideoPlayer from "../components/VideoPlayer";
 const TABS = ["All Posts", "Videos", "Daily Quotes", "Gratitude"] as const;
 
 const getApiBase = () => {
-  const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8001" : "/api");
+  const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "/api");
   if (base.startsWith("http")) return base;
   return window.location.origin + (base.startsWith("/") ? "" : "/") + base;
 };
