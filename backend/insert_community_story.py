@@ -24,7 +24,7 @@ def insert_steve_jobs_story():
 Jobs was always an intelligent and innovative thinker since his childhood. However, his youth was struck in the quicksand of formal schooling education. Due to the boredom, he was a prankster during his days in elementary school, and hence, his fourth-grade teacher needed to bribe him to study. He tested so well that the administrators wanted him to skip ahead to high school. However, his parents declined that offer.
 
 Post high school, Steve enrolled at Reed College in Portland, Oregon. There too, he was frustrated and dropped out of college and spent the next year and a half dropping in on creative classes at the school. He had developed a love of typography during his struggling days.""",
-        "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop",
+        "image_url": "/steve_jobs.jpg",
         "author": "MindRise Community",
         "created_at": datetime.utcnow().isoformat()
     }

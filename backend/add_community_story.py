@@ -17,7 +17,7 @@ def add_story(title, description, content, image_url=None, author="MindRise Comm
         "title": title,
         "description": description,
         "content": content,
-        "image_url": image_url or "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop",
+        "image_url": image_url or "/steve_jobs.jpg",
         "author": author,
         "created_at": datetime.utcnow().isoformat()
     }
