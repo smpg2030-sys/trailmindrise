@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Bell, Plus, Image as ImageIcon, Camera, Wand2, Video as VideoIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Post, Video } from "../types";
@@ -19,7 +19,17 @@ const API_BASE = getApiBase();
 export default function HomeFeedScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("All Posts");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "Videos") {
+      setActiveTab("Videos");
+    } else if (!tabParam) {
+      setActiveTab("All Posts");
+    }
+  }, [searchParams]);
   const [showNewPost, setShowNewPost] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [postContent, setPostContent] = useState("");

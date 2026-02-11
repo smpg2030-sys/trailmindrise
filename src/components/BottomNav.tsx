@@ -1,11 +1,11 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Compass, MessageCircle, Zap, User } from "lucide-react";
+import { Home, Compass, Zap, User, Video } from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Home", Icon: Home },
+  { to: "/?tab=Videos", label: "Videos", Icon: Video },
   { to: "/explore", label: "Explore", Icon: Compass },
-  { to: "/messages", label: "Messages", Icon: MessageCircle },
   { to: "/focus", label: "Focus", Icon: Zap },
   { to: "/profile", label: "Profile", Icon: User },
 ];
@@ -20,8 +20,7 @@ export default function BottomNav() {
             to={to}
             end={to === "/"}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center flex-1 py-1 text-xs transition ${
-                isActive ? "text-green-600 font-medium" : "text-slate-500"
+              `flex flex-col items-center justify-center flex-1 py-1 text-xs transition ${isActive ? "text-green-600 font-medium" : "text-slate-500"
               }`
             }
           >
