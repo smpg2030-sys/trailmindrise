@@ -84,16 +84,7 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     else:
         users.insert_one(doc)
 
-    # Send OTP
-    if data.email:
-        message = MessageSchema(
-            subject="MindRise Verification OTP",
-            recipients=[data.email],
-            body=f"Your verification code is: {otp}",
-            subtype=MessageType.html
-        )
-        fm = FastMail(conf)
-        background_tasks.add_task(fm.send_message, message)
+
     # Send OTP
     if data.email:
         message = MessageSchema(
