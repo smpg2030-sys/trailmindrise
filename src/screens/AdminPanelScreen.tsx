@@ -266,6 +266,15 @@ export default function AdminPanelScreen() {
                     <XCircle className="w-4 h-4" /> Revoke Approval
                   </button>
                 )}
+
+                {activeTab === "history" && post.status === "rejected" && (
+                  <button
+                    onClick={() => handleModeration(post.id, "approved")}
+                    className="w-full bg-green-50 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Approve (Undo Rejection)
+                  </button>
+                )}
               </div>
             ))
           )}

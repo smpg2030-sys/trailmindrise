@@ -108,12 +108,23 @@ def update_post_status(post_id: str, update: PostStatusUpdate, role: str):
         return {"message": "Post approved and moved to live feed"}
     
     else:  # rejected
+        # First try to update in pending_posts (for pending or already rejected posts)
         result = db.pending_posts.update_one(
             {"_id": ObjectId(post_id)},
             {"$set": {"status": "rejected", "rejection_reason": update.rejection_reason}}
         )
         
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Post not found in pending moderation")
+            # Not found in pending_posts, check if it's in posts (already approved)
+            post = db.posts.find_one({"_id": ObjectId(post_id)})
+            if post:
+                # Move back to pending_posts with rejected status
+                post["status"] = "rejected"
+                post["rejection_reason"] = update.rejection_reason
+                db.pending_posts.insert_one(post)
+                db.posts.delete_one({"_id": ObjectId(post_id)})
+                return {"message": "Post approval revoked and rejected"}
+            else:
+                raise HTTPException(status_code=404, detail="Post not found in pending or approved posts")
             
         return {"message": "Post rejected"}
