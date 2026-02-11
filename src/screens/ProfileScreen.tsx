@@ -126,7 +126,7 @@ export default function ProfileScreen() {
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && user) {
       const file = e.target.files[0];
-      if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      if (file.size > 100 * 1024 * 1024) {
         alert("Video file is too large. Max 100MB allowed.");
         return;
       }
@@ -134,13 +134,17 @@ export default function ProfileScreen() {
       setIsUploadingVideo(true);
       try {
         const caption = prompt("Enter a caption for your video (optional):") || "";
+        console.log("Starting video upload process...");
 
         // 1. Get Signature from Backend
+        console.log("Fetching upload signature from backend...");
         const sigRes = await fetch(`${API_BASE}/upload-video/signature`);
-        if (!sigRes.ok) throw new Error("Could not get upload signature");
+        if (!sigRes.ok) throw new Error("Could not get upload signature (Backend error)");
         const { signature, timestamp, api_key, cloud_name, folder } = await sigRes.json();
+        console.log("Signature received:", { api_key, cloud_name, folder });
 
         // 2. Upload directly to Cloudinary
+        console.log("Uploading direct to Cloudinary...");
         const cloudFormData = new FormData();
         cloudFormData.append("file", file);
         cloudFormData.append("api_key", api_key);
@@ -161,8 +165,10 @@ export default function ProfileScreen() {
 
         const cloudData = await cloudRes.json();
         const videoUrl = cloudData.secure_url;
+        console.log("Cloudinary upload successful! URL:", videoUrl);
 
         // 3. Register metadata with our backend
+        console.log("Registering video with MindRise backend...");
         const regRes = await fetch(`${API_BASE}/upload-video/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -174,11 +180,12 @@ export default function ProfileScreen() {
         });
 
         if (!regRes.ok) {
-          const err = await regRes.json();
-          throw new Error(err.detail || "Failed to register video metadata");
+          const errData = await regRes.json();
+          throw new Error(errData.detail || "Failed to register video metadata with backend");
         }
 
         const regData = await regRes.json();
+        console.log("Video registration successful:", regData);
 
         if (regData.success) {
           const newVideo: Video = {
@@ -195,8 +202,8 @@ export default function ProfileScreen() {
           alert("Failed to upload video: " + (regData.message || "Unknown error"));
         }
       } catch (error: any) {
-        console.error("Video upload error", error);
-        alert(`Error uploading video: ${error.message || "Unknown error"}`);
+        console.error("CRITICAL UPLOAD ERROR:", error);
+        alert(`Error uploading video: ${error.message || "Network error. Check your connection or Vercel logs."}`);
       } finally {
         setIsUploadingVideo(false);
       }
