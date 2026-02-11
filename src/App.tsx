@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import WelcomeScreen from "./screens/WelcomeScreen";
@@ -14,7 +13,10 @@ import ProfileScreen from "./screens/ProfileScreen";
 import TherapistSupportScreen from "./screens/TherapistSupportScreen";
 import AdminPanelScreen from "./screens/AdminPanelScreen";
 import ArticleDetailScreen from "./screens/ArticleDetailScreen";
+import CommunityStoriesPreviewScreen from "./screens/CommunityStoriesPreviewScreen";
 import StoryDetailScreen from "./screens/StoryDetailScreen";
+import { AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -28,9 +30,6 @@ function LoginRedirect() {
   return <LoginScreen />;
 }
 
-import { AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
-
 function AppRoutes() {
   const location = useLocation();
 
@@ -41,6 +40,14 @@ function AppRoutes() {
         <Route path="/goals" element={<GoalsScreen />} />
         <Route path="/login" element={<LoginRedirect />} />
         <Route path="/verify" element={<VerifyOTPScreen />} />
+        <Route
+          path="/community-stories"
+          element={
+            <ProtectedRoute>
+              <CommunityStoriesPreviewScreen />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/story/:storyId"
           element={
@@ -62,22 +69,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AdminPanelScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/story/:storyId"
-          element={
-            <ProtectedRoute>
-              <StoryDetailScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/article/:articleId"
-          element={
-            <ProtectedRoute>
-              <ArticleDetailScreen />
             </ProtectedRoute>
           }
         />

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
-
 
 // Category icons and labels
 const CATEGORIES = [
@@ -19,50 +18,11 @@ const EBOOKS = [
   { title: "Calm Mind Journey", author: "Sarah Miller", cover: "📔", price: "Premium" },
 ];
 
-const getApiBase = () => {
-  const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api");
-  if (base.startsWith("http")) return base;
-  return window.location.origin + (base.startsWith("/") ? "" : "/") + base;
-};
-
-const API_BASE = getApiBase();
-
-import { CommunityStory } from "../types";
-
-// ... existing imports
-
-// ... existing consts
-
 export default function ExploreScreen() {
   const navigate = useNavigate();
   const [showEbooks, setShowEbooks] = useState(false);
-  const [showCommunity, setShowCommunity] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [hasEbookAccess, setHasEbookAccess] = useState(false);
-  const [communityStories, setCommunityStories] = useState<CommunityStory[]>([]);
-
-  const [error, setError] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    setError(null);
-    fetch(`${API_BASE}/community-stories/`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setCommunityStories(data);
-        } else {
-          setCommunityStories([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch stories:", err);
-        setError(err.message);
-        setCommunityStories([]);
-      });
-  }, []);
 
   const handleSubscribe = () => {
     setShowPayment(true);
@@ -117,7 +77,7 @@ export default function ExploreScreen() {
               type="button"
               onClick={() => {
                 if (cat.title === "E-Books") setShowEbooks(true);
-                if (cat.title === "Community") setShowCommunity(true);
+                if (cat.title === "Community") navigate("/community-stories");
               }}
               className={`${cat.bg} rounded-xl p-6 text-left transition hover:opacity-90`}
             >
@@ -129,62 +89,7 @@ export default function ExploreScreen() {
         </div>
       </div>
 
-      {showCommunity && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-4"
-          onClick={() => setShowCommunity(false)}
-        >
-          <div
-            className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-bold">Community Stories</h2>
-              <button type="button" onClick={() => setShowCommunity(false)} className="text-2xl text-slate-500">
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {communityStories.map((story, i) => (
-                <div key={story.id || i} className="bg-slate-50 rounded-2xl p-4 flex flex-col gap-3 border border-slate-100 shadow-sm">
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 bg-white rounded-xl shadow-sm overflow-hidden flex-shrink-0">
-                      {story.image_url?.startsWith("/") || story.image_url?.startsWith("http") ? (
-                        <img src={story.image_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-violet-100 flex items-center justify-center text-3xl">
-                          📰
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{story.title}</h3>
-                      <p className="text-sm text-slate-500 mt-1">{story.author}</p>
-                    </div>
-                  </div>
-                  <p className="text-slate-600 text-sm leading-relaxed line-clamp-3">{story.description}</p>
-                  <button
-                    className="w-full py-3 bg-violet-600 text-white text-center rounded-xl font-semibold hover:bg-violet-700 transition"
-                    onClick={() => {
-                      setShowCommunity(false);
-                      navigate(`/story/${story.id}`);
-                    }}
-                  >
-                    Read Story
-                  </button>
-                </div>
-              ))}
-              {communityStories.length === 0 && (
-                <div className="text-center py-10 text-slate-400">
-                  <div className="text-4xl mb-2">📭</div>
-                  <p className="text-sm">{error ? `Error: ${error}` : "More stories coming soon!"}</p>
-                </div>
-              )}
-              <div className="h-4" /> {/* Bottom padding for better scroll feel */}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Community Modal removed in favor of dedicated Preview Screen */}
 
       {showEbooks && (
         <div
