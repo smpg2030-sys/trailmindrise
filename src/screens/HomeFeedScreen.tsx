@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { Post, Video } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoPlayer from "../components/VideoPlayer";
+import GrowthTree from "../components/GrowthTree";
 
 const TABS = ["Videos", "All Posts", "Daily Quotes", "Gratitude"] as const;
 
@@ -245,6 +246,11 @@ export default function HomeFeedScreen() {
           </h1>
         </div>
         <div className="flex items-center gap-3">
+          <GrowthTree
+            variant="mini"
+            createdAt={user?.created_at}
+            onClick={() => navigate("/profile")}
+          />
           <button
             type="button"
             onClick={() => setShowSearch(true)}

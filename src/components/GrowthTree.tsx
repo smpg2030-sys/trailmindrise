@@ -3,9 +3,11 @@ import { TreePine, Sprout, Leaf, Flower2, Sparkles } from "lucide-react";
 
 interface GrowthTreeProps {
     createdAt?: string | null;
+    variant?: "full" | "mini";
+    onClick?: () => void;
 }
 
-export default function GrowthTree({ createdAt }: GrowthTreeProps) {
+export default function GrowthTree({ createdAt, variant = "full", onClick }: GrowthTreeProps) {
     const calculateDays = () => {
         if (!createdAt) return 0;
         const created = new Date(createdAt);
@@ -17,20 +19,44 @@ export default function GrowthTree({ createdAt }: GrowthTreeProps) {
     const days = calculateDays();
 
     const getStage = () => {
-        if (days >= 90) return { icon: <TreePine size={64} className="text-yellow-400" />, label: "Glowing Tree", sub: "90+ Days of Growth", color: "from-yellow-400 to-amber-600", effect: true };
-        if (days >= 60) return { icon: <Flower2 size={64} className="text-pink-400" />, label: "Flowering Tree", sub: "60+ Days of Growth", color: "from-pink-400 to-rose-600" };
-        if (days >= 30) return { icon: <TreePine size={64} className="text-green-500" />, label: "Healthy Tree", sub: "30+ Days of Growth", color: "from-green-500 to-emerald-700" };
-        if (days >= 14) return { icon: <TreePine size={48} className="text-green-400" />, label: "Growing Tree", sub: "14+ Days of Growth", color: "from-green-400 to-green-600" };
-        if (days >= 7) return { icon: <Leaf size={40} className="text-green-300" />, label: "Small Plant", sub: "7+ Days of Growth", color: "from-green-300 to-green-500" };
-        if (days >= 3) return { icon: <Sprout size={32} className="text-green-200" />, label: "Small Sprout", sub: "3+ Days of Growth", color: "from-green-200 to-green-400" };
-        return { icon: <div className="w-4 h-4 rounded-full bg-amber-800" />, label: "Seed", sub: "Just Started", color: "from-amber-700 to-amber-900" };
+        if (days >= 90) return { icon: <TreePine size={variant === "mini" ? 20 : 64} className="text-yellow-400" />, label: "Glowing Tree", sub: "90+ Days", color: "from-yellow-400 to-amber-600", effect: true };
+        if (days >= 60) return { icon: <Flower2 size={variant === "mini" ? 20 : 64} className="text-pink-400" />, label: "Flowering Tree", sub: "60+ Days", color: "from-pink-400 to-rose-600" };
+        if (days >= 30) return { icon: <TreePine size={variant === "mini" ? 20 : 64} className="text-green-500" />, label: "Healthy Tree", sub: "30+ Days", color: "from-green-500 to-emerald-700" };
+        if (days >= 14) return { icon: <TreePine size={variant === "mini" ? 18 : 48} className="text-green-400" />, label: "Growing Tree", sub: "14+ Days", color: "from-green-400 to-green-600" };
+        if (days >= 7) return { icon: <Leaf size={variant === "mini" ? 18 : 40} className="text-green-300" />, label: "Small Plant", sub: "7+ Days", color: "from-green-300 to-green-500" };
+        if (days >= 3) return { icon: <Sprout size={variant === "mini" ? 16 : 32} className="text-green-200" />, label: "Small Sprout", sub: "3+ Days", color: "from-green-200 to-green-400" };
+        return { icon: <div className={`${variant === "mini" ? "w-2 h-2" : "w-4 h-4"} rounded-full bg-amber-800`} />, label: "Seed", sub: "Started", color: "from-amber-700 to-amber-900" };
     };
 
     const stage = getStage();
 
+    if (variant === "mini") {
+        return (
+            <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClick}
+                className={`relative flex items-center justify-center p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden group`}
+            >
+                <div className={`absolute inset-0 bg-gradient-to-br ${stage.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
+                <div className="relative z-10">
+                    {stage.icon}
+                    {stage.effect && (
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                            className="absolute -inset-1 flex items-center justify-center pointer-events-none"
+                        >
+                            <Sparkles size={24} className="text-yellow-400 opacity-40 blur-[1px]" />
+                        </motion.div>
+                    )}
+                </div>
+            </motion.button>
+        );
+    }
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden relative group">
-            {/* Decorative background gradients */}
             <div className={`absolute inset-0 bg-gradient-to-br ${stage.color} opacity-5 group-hover:opacity-10 transition-opacity duration-500`} />
 
             <div className="relative flex flex-col items-center gap-6 text-center">
@@ -57,7 +83,6 @@ export default function GrowthTree({ createdAt }: GrowthTreeProps) {
                         )}
                     </motion.div>
 
-                    {/* Particle decorations */}
                     <motion.div
                         animate={{ y: [0, -10, 0] }}
                         transition={{ duration: 3, repeat: Infinity }}
