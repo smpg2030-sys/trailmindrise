@@ -165,7 +165,7 @@ async def forgot_password(data: PasswordResetRequest, background_tasks: Backgrou
 
 
 @router.post("/reset-password")
-def reset_password(data: PasswordResetConfirm):
+async def reset_password(data: PasswordResetConfirm, background_tasks: BackgroundTasks):
     db = get_db()
     if db is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -183,6 +183,17 @@ def reset_password(data: PasswordResetConfirm):
         {"email": data.email}, 
         {"$set": {"password_hash": new_hash, "otp": None}}
     )
+    
+    # Send Confirmation Email
+    message = MessageSchema(
+        subject="MindRise: Password Changed Successfully",
+        recipients=[data.email],
+        body=f"Hello,\n\nYour password for MindRise has been successfully changed. If you did not request this change, please contact support immediately.",
+        subtype=MessageType.html
+    )
+
+    fm = FastMail(conf)
+    background_tasks.add_task(fm.send_message, message)
     
     return {"message": "Password updated successfully"}
 @router.get("/user/{user_id}", response_model=UserResponse)
