@@ -114,8 +114,9 @@ def update_post_status(post_id: str, update: PostStatusUpdate, role: str):
 def get_videos(role: str, status: str = "all"):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db_mindrise = get_db()  # Use canonical DB for users
     client = get_client()
-    db_mindrise = client["mindrise"]
     db_videos = client["MindRiseDB"]
     
     query = {}
@@ -131,11 +132,29 @@ def get_videos(role: str, status: str = "all"):
     results = []
     for doc in videos_cursor:
         doc["id"] = str(doc["_id"])
-        user = db_mindrise.users.find_one({"_id": ObjectId(doc["user_id"])})
-        if user:
-            doc["author_email"] = user.get("email")
+        
+        # 1. Populate author_name/email from users collection
+        user_doc = db_mindrise.users.find_one({"_id": ObjectId(doc["user_id"])})
+        if user_doc:
+            doc["author_name"] = user_doc.get("full_name") or user_doc.get("email") or "MindRise User"
+            doc["author_email"] = user_doc.get("email")
+        else:
+            # Fallback if user doc not found (e.g. deleted or inconsistent)
+            if "author_name" not in doc:
+                doc["author_name"] = "Unknown User"
+        
+        # 2. Ensure status is lowercase for model compliance
         if "status" in doc:
             doc["status"] = doc["status"].lower()
+        else:
+            doc["status"] = "pending"
+            
+        # 3. Ensure created_at is a string (ISO format)
+        if isinstance(doc.get("created_at"), datetime):
+            doc["created_at"] = doc["created_at"].isoformat()
+        elif "created_at" not in doc:
+            doc["created_at"] = datetime.utcnow().isoformat()
+            
         results.append(doc)
     return results
 

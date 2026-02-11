@@ -52,6 +52,7 @@ def get_upload_signature():
 async def register_video(payload: dict):
     video_url = payload.get("video_url")
     user_id = payload.get("user_id")
+    author_name = payload.get("author_name", "MindRise User")
     caption = payload.get("caption", "")
     
     if not video_url or not user_id:
@@ -63,6 +64,7 @@ async def register_video(payload: dict):
     
     record = {
         "user_id": user_id,
+        "author_name": author_name,
         "video_url": video_url,
         "caption": caption,
         "status": "Pending",
