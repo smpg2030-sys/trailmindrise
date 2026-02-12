@@ -313,7 +313,7 @@ export default function HomeFeedScreen() {
         // 3. Register as a post with our backend
         const queryParams = new URLSearchParams({
           user_id: user?.id || "",
-          author_name: user?.full_name || user?.email || "MindRise User"
+          author_name: user?.full_name || user?.email || "Bodham User"
         }).toString();
 
         const response = await fetch(`${API_BASE}/posts/?${queryParams}`, {

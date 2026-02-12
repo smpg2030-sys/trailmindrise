@@ -20,7 +20,7 @@ export default function Sidebar() {
         <aside className="w-64 h-screen sticky top-0 bg-white border-r border-slate-200 flex flex-col p-4 z-40">
             <div className="mb-8 px-2">
                 <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-600 tracking-tight">
-                    MindRise
+                    Bodham
                 </h1>
             </div>
 

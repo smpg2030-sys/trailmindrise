@@ -45,7 +45,7 @@ export default function WelcomeScreen() {
         className="text-center z-10"
       >
         <h1 className="text-5xl font-bold text-slate-800 mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">
-          MindRise
+          Bodham
         </h1>
         <p className="text-slate-600 text-lg px-6 mb-12 leading-relaxed max-w-xs mx-auto">
           Your peaceful space for <br />

@@ -23,8 +23,8 @@ export default function GoalsScreen() {
   const handleContinue = () => {
     if (selectedGoals.length) {
       try {
-        localStorage.setItem("mindrise_goals", JSON.stringify(selectedGoals));
-      } catch {}
+        localStorage.setItem("bodham_goals", JSON.stringify(selectedGoals));
+      } catch { }
     }
     navigate("/login");
   };
@@ -34,7 +34,7 @@ export default function GoalsScreen() {
       <h2 className="text-3xl font-bold text-center mt-12 mb-2 text-slate-800">
         What brings you to
         <br />
-        MindRise?
+        Bodham?
       </h2>
       <p className="text-slate-500 text-center mb-8">
         Select your mental wellness goals to personalize your experience.
@@ -46,11 +46,10 @@ export default function GoalsScreen() {
             key={goal.id}
             type="button"
             onClick={() => toggle(goal.id)}
-            className={`relative rounded-2xl p-6 text-left transition border-2 ${
-              selectedGoals.includes(goal.id)
+            className={`relative rounded-2xl p-6 text-left transition border-2 ${selectedGoals.includes(goal.id)
                 ? "border-green-500 bg-green-50"
                 : "border-transparent bg-white"
-            } goal-card ${selectedGoals.includes(goal.id) ? "selected" : ""}`}
+              } goal-card ${selectedGoals.includes(goal.id) ? "selected" : ""}`}
           >
             <span className="text-4xl block mb-3">{goal.icon}</span>
             <h3 className="font-bold text-lg text-slate-800">{goal.title}</h3>

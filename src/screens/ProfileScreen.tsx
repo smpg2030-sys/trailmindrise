@@ -552,7 +552,7 @@ export default function ProfileScreen() {
           </div>
         </div>
 
-        {/* MindRise Growth Tree Section */}
+        {/* Bodham Growth Tree Section */}
         {(isOwnProfile || friendshipStatus === "accepted") ? (
           <div className="mb-8">
             <GrowthTree

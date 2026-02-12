@@ -189,7 +189,7 @@ export default function LoginScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-center mb-1">MindRise</h1>
+        <h1 className="text-2xl font-bold text-center mb-1">Bodham</h1>
         <p className="text-center text-sm text-slate-500 mb-6">
           {mode === "login" && "Sign in to your account"}
           {mode === "register" && "Create an account"}

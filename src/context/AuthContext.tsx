@@ -10,7 +10,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const STORAGE_KEY = "mindrise_user";
+const STORAGE_KEY = "bodham_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(() => {
