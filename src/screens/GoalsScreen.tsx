@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const GOALS = [
@@ -30,13 +30,13 @@ export default function GoalsScreen() {
   };
 
   return (
-    <div className="app-container min-h-screen bg-[#f8f9fa] p-6 pb-28">
-      <h2 className="text-3xl font-bold text-center mt-12 mb-2 text-slate-800">
+    <div className="app-container min-h-screen bg-black p-6 pb-28 flex flex-col justify-center">
+      <h2 className="text-3xl font-black text-left mb-2 text-white tracking-tight">
         What brings you to
         <br />
         Bodham?
       </h2>
-      <p className="text-slate-500 text-center mb-8">
+      <p className="text-slate-500 text-left mb-8">
         Select your mental wellness goals to personalize your experience.
       </p>
 
@@ -46,16 +46,16 @@ export default function GoalsScreen() {
             key={goal.id}
             type="button"
             onClick={() => toggle(goal.id)}
-            className={`relative rounded-2xl p-6 text-left transition border-2 ${selectedGoals.includes(goal.id)
-                ? "border-green-500 bg-green-50"
-                : "border-transparent bg-white"
-              } goal-card ${selectedGoals.includes(goal.id) ? "selected" : ""}`}
+            className={`relative rounded-xl p-6 text-left transition border ${selectedGoals.includes(goal.id)
+              ? "border-white bg-slate-900"
+              : "border-slate-800 bg-black hover:bg-slate-900/50"
+              }`}
           >
-            <span className="text-4xl block mb-3">{goal.icon}</span>
-            <h3 className="font-bold text-lg text-slate-800">{goal.title}</h3>
+            <span className="text-3xl block mb-3">{goal.icon}</span>
+            <h3 className="font-bold text-lg text-white">{goal.title}</h3>
             <p className="text-sm text-slate-500">{goal.subtitle}</p>
             {selectedGoals.includes(goal.id) && (
-              <div className="absolute top-3 right-3 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
+              <div className="absolute top-3 right-3 w-5 h-5 bg-white rounded-full flex items-center justify-center text-black text-xs font-bold">
                 ✓
               </div>
             )}
@@ -63,11 +63,11 @@ export default function GoalsScreen() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t max-w-[430px] mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-black border-t border-slate-800 max-w-[430px] mx-auto">
         <button
           type="button"
           onClick={handleContinue}
-          className="w-full py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-green-400 to-green-600"
+          className="w-full py-3.5 rounded-full font-bold text-black bg-white hover:bg-slate-200 transition-colors"
         >
           Continue
         </button>

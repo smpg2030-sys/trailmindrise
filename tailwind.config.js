@@ -5,66 +5,66 @@ export default {
   theme: {
     extend: {
       colors: {
+        black: "#000000",
+        white: "#ffffff",
         primary: {
-          50: "#ecfdf5",
-          100: "#d1fae5",
-          200: "#a7f3d0",
-          300: "#6ee7b7",
-          400: "#34d399",
-          500: "#10b981", // Base Emerald
-          600: "#059669",
-          700: "#047857",
-          800: "#065f46",
-          900: "#064e3b",
-          950: "#022c22",
+          500: "#ffffff", // Main Action White
+          600: "#e7e9ea", // Hover White
         },
-        surface: {
-          50: "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          300: "#cbd5e1",
-          400: "#94a3b8",
-          500: "#64748b",
-          600: "#475569",
-          700: "#334155",
-          800: "#1e293b", // Dark Charcoal
-          900: "#0f172a",
-          950: "#020617",
+        slate: {
+          50: "#16181c", // Very dark gray for hover backgrounds
+          100: "#181818",
+          200: "#202327",
+          300: "#2f3336", // X Border Color
+          400: "#536471",
+          500: "#71767b", // Secondary Text
+          600: "#536471",
+          700: "#333639",
+          800: "#16181c",
+          900: "#000000",
         },
-        accent: {
-          light: "#818cf8", // Indigo
-          DEFAULT: "#6366f1",
-          dark: "#4f46e5",
+        zinc: {
+          // Mapping tailwind standard to X palette logic where possible
+          800: "#16181c",
+          900: "#000000",
+          950: "#000000"
+        },
+        // Remove colorful accents or map them to grayscale
+        emerald: {
+          400: "#ffffff",
+          500: "#ffffff",
+          600: "#e7e9ea",
+        },
+        sky: {
+          500: "#1d9bf0", // Keep X blue for links if needed, or white
         }
       },
       fontFamily: {
-        sans: ['"Outfit"', 'sans-serif'],
+        sans: ['"Outfit"', 'sans-serif'], // Keep existing font or switch to system? User said "design style", usually implies font too but I'll keep Outfit for now to ensure "functionality/base" is intact.
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        'premium': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
+        'none': 'none',
+        'sm': 'none', // Remove shadows
+        'md': 'none',
+        'lg': 'none',
+        'xl': 'none',
+        '2xl': 'none',
+        'premium': 'none',
+        'glass': 'none',
       },
-      animation: {
-        'float': 'float 6s ease-in-out infinite',
-        'fade-in': 'fadeIn 0.5s ease-out forwards',
-        'slide-up': 'slideUp 0.5s ease-out forwards',
-      },
-      keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        }
+      borderRadius: {
+        'none': '0',
+        'sm': '2px',
+        'DEFAULT': '4px',
+        'md': '6px', // User max request
+        'lg': '6px', // cap at 6px
+        'xl': '6px',
+        '2xl': '6px',
+        '3xl': '6px',
+        'full': '9999px', // For pill buttons
       }
     },
   },
   plugins: [],
+  darkMode: 'class',
 };

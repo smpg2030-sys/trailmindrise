@@ -187,10 +187,10 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-black dark:to-zinc-900 p-6 transition-colors duration-300">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl shadow-xl border border-slate-100 dark:border-zinc-900 p-8">
-        <h1 className="text-2xl font-bold text-center mb-1 text-slate-800 dark:text-white">Bodham</h1>
-        <p className="text-center text-sm text-slate-500 dark:text-zinc-500 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-black p-6">
+      <div className="w-full max-w-md bg-black rounded-2xl shadow-xl border border-slate-800 p-8">
+        <h1 className="text-2xl font-bold text-center mb-1 text-white">Bodham</h1>
+        <p className="text-center text-sm text-slate-500 mb-6">
           {mode === "login" && "Sign in to your account"}
           {mode === "register" && "Create an account"}
           {mode === "forgot-request" && "Reset your password"}
@@ -207,7 +207,7 @@ export default function LoginScreen() {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   disabled={isPhoneVerified}
-                  className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                  className="flex-1 px-4 py-2 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600"
                   placeholder="Enter mobile number"
                 />
                 {!isPhoneVerified && (
@@ -215,7 +215,7 @@ export default function LoginScreen() {
                     type="button"
                     onClick={handleSendPhoneOTP}
                     disabled={loading || !phoneNumber}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm shadow-emerald-200"
+                    className="px-4 py-2 bg-white text-black rounded-xl text-xs font-bold hover:bg-slate-200 disabled:opacity-50 transition"
                   >
                     Send OTP
                   </button>
@@ -228,7 +228,7 @@ export default function LoginScreen() {
                     type="text"
                     value={phoneOtp}
                     onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                    className="flex-1 px-4 py-2 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600"
                     placeholder="Enter 6-digit OTP"
                   />
                   <button
@@ -243,7 +243,7 @@ export default function LoginScreen() {
               )}
 
               {isPhoneVerified && (
-                <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs bg-emerald-50 p-2 rounded-lg">
+                <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
                   <span className="text-base">✅</span> Phone Verified
                 </div>
               )}
@@ -253,18 +253,18 @@ export default function LoginScreen() {
           {mode === "register" && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-zinc-300">
+                <label className="block text-sm font-medium mb-1 text-slate-300">
                   Full name
                 </label>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="input-field"
+                  className="w-full px-4 py-3 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600"
                   placeholder="Your name"
                 />
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+              <div className="p-4 bg-black rounded-2xl border border-slate-800 space-y-3">
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Mobile Verification (Optional)</label>
                 <div className="flex gap-2">
                   <input
@@ -318,7 +318,7 @@ export default function LoginScreen() {
 
           {(mode === "login" || mode === "register" || mode === "forgot-request" || mode === "forgot-reset") && (
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-zinc-300">
+              <label className="block text-sm font-medium mb-1 text-slate-300">
                 {mode === "register" ? "Email Address" : "Email or Mobile"}
               </label>
               <input
@@ -327,7 +327,7 @@ export default function LoginScreen() {
                 onChange={(e) => setEmailOrMobile(e.target.value)}
                 required
                 disabled={mode === "forgot-reset"}
-                className="input-field disabled:opacity-70"
+                className="w-full px-4 py-3 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600 disabled:opacity-50"
                 placeholder={mode === "register" ? "you@example.com" : "you@example.com or mobile"}
               />
             </div>
@@ -335,12 +335,12 @@ export default function LoginScreen() {
 
           {mode === "forgot-reset" && (
             <div>
-              <label className="block text-sm font-medium mb-1">OTP Code</label>
+              <label className="block text-sm font-medium mb-1 text-slate-300">OTP Code</label>
               <input
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 required
-                className="input-field"
+                className="w-full px-4 py-3 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600"
                 placeholder="Enter 6-digit code"
               />
             </div>
@@ -348,7 +348,7 @@ export default function LoginScreen() {
 
           {(mode === "login" || mode === "register") && (
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-slate-300">
                 Password
               </label>
               <div className="relative">
@@ -357,13 +357,13 @@ export default function LoginScreen() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="input-field pr-10 dark:bg-zinc-900 dark:border-zinc-800 dark:text-white dark:placeholder-zinc-600"
+                  className="w-full px-4 py-3 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600 pr-10"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
                   {showPassword ? "👁️" : "👁️‍🗨️"}
                 </button>
@@ -373,7 +373,7 @@ export default function LoginScreen() {
 
           {mode === "forgot-reset" && (
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-slate-300">
                 New Password
               </label>
               <div className="relative">
@@ -382,13 +382,13 @@ export default function LoginScreen() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="input-field pr-10"
+                  className="w-full px-4 py-3 bg-slate-900 rounded-xl border border-slate-800 text-sm focus:ring-0 focus:border-slate-600 outline-none transition text-white placeholder-slate-600 pr-10"
                   placeholder="New password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
                   {showPassword ? "👁️" : "👁️‍🗨️"}
                 </button>
@@ -401,7 +401,7 @@ export default function LoginScreen() {
               <button
                 type="button"
                 onClick={() => setMode("forgot-request")}
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                className="text-xs font-semibold text-slate-400 hover:text-white"
               >
                 Forgot Password?
               </button>
@@ -422,7 +422,7 @@ export default function LoginScreen() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-green-400 to-green-600 disabled:opacity-50"
+            className="w-full py-3.5 rounded-full font-bold text-black bg-white hover:bg-slate-200 disabled:opacity-50 transition-colors"
           >
             {loading ? "Please wait..." :
               mode === "login" ? "Sign In" :

@@ -43,12 +43,12 @@ export default function ArticleDetailScreen() {
 
     if (!article) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Article Not Found</h2>
-                <p className="text-slate-600 mb-6">The story you're looking for might have been removed.</p>
+            <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center bg-black">
+                <h2 className="text-2xl font-bold text-white mb-2">Article Not Found</h2>
+                <p className="text-slate-500 mb-6">The story you're looking for might have been removed.</p>
                 <button
                     onClick={() => navigate(-1)}
-                    className="px-6 py-2 bg-violet-600 text-white rounded-xl font-semibold"
+                    className="px-6 py-2 bg-white text-black rounded-full font-bold"
                 >
                     Go Back
                 </button>
@@ -60,18 +60,18 @@ export default function ArticleDetailScreen() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white min-h-screen flex flex-col"
+            className="bg-black min-h-screen flex flex-col"
         >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 flex items-center gap-4">
+            <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-slate-800 p-4 flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"
+                    className="p-2 hover:bg-slate-900 rounded-full text-white transition"
                 >
                     <ChevronLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-lg font-bold text-slate-800 truncate">Story Details</h1>
-                <button className="ml-auto p-2 hover:bg-slate-100 rounded-full text-slate-600">
+                <h1 className="text-lg font-bold text-white truncate">Story Details</h1>
+                <button className="ml-auto p-2 hover:bg-slate-900 rounded-full text-slate-400">
                     <Share2 className="w-5 h-5" />
                 </button>
             </div>
@@ -79,12 +79,12 @@ export default function ArticleDetailScreen() {
             <div className="flex-1 overflow-y-auto">
                 <div className="p-6">
                     {/* Title at the top */}
-                    <h1 className="text-3xl font-extrabold text-slate-900 leading-tight mb-6">
+                    <h1 className="text-3xl font-extrabold text-white leading-tight mb-6">
                         {article.title}
                     </h1>
 
                     {/* Image below the title */}
-                    <div className="rounded-2xl overflow-hidden bg-slate-100 aspect-video mb-8 shadow-sm">
+                    <div className="rounded-2xl overflow-hidden bg-slate-900 aspect-video mb-8 shadow-sm border border-slate-800">
                         {article.image_url ? (
                             <img
                                 src={article.image_url}
@@ -92,26 +92,26 @@ export default function ArticleDetailScreen() {
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-6xl">📰</div>
+                            <div className="w-full h-full flex items-center justify-center text-6xl text-slate-700">📰</div>
                         )}
                     </div>
 
                     {/* Full content */}
-                    <div className="prose prose-slate max-w-none mb-10">
-                        <p className="text-violet-700 font-medium text-lg leading-relaxed mb-6 italic border-l-4 border-violet-200 pl-4">
+                    <div className="prose prose-invert max-w-none mb-10">
+                        <p className="text-white font-medium text-lg leading-relaxed mb-6 italic border-l-4 border-slate-700 pl-4">
                             {article.short_description}
                         </p>
                         {article.content.split('\n\n').map((para: string, i: number) => (
-                            <p key={i} className="text-slate-700 text-lg leading-relaxed mb-4">
+                            <p key={i} className="text-slate-300 text-lg leading-relaxed mb-4">
                                 {para}
                             </p>
                         ))}
                     </div>
 
                     {/* Author and Date at the bottom */}
-                    <div className="pt-8 border-t border-slate-100 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                            <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600">
+                    <div className="pt-8 border-t border-slate-800 flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-white font-semibold">
+                            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white border border-slate-700">
                                 <User className="w-4 h-4" />
                             </div>
                             <span>{article.author}</span>

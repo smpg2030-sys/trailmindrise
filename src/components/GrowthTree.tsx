@@ -88,12 +88,12 @@ export default function GrowthTree({ createdAt, manualStreak, variant = "full", 
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden relative group">
+        <div className="bg-black rounded-3xl p-8 shadow-xl border border-slate-800 overflow-hidden relative group">
             <div className={`absolute inset-0 bg-gradient-to-br ${stage.color} opacity-5 group-hover:opacity-10 transition-opacity duration-500`} />
 
             <div className="relative flex flex-col items-center gap-6 text-center">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    🌳 <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-600">My Growth Tree</span>
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    🌳 <span className="text-white">My Growth Tree</span>
                 </h2>
 
                 <div className="relative">
@@ -101,7 +101,7 @@ export default function GrowthTree({ createdAt, manualStreak, variant = "full", 
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                        className={`w-32 h-32 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 shadow-2xl border-4 border-opacity-20 ${stage.color.split(' ')[0]}`}
+                        className={`w-32 h-32 rounded-full flex items-center justify-center bg-slate-900 shadow-2xl border-4 border-opacity-20 ${stage.color.split(' ')[0]}`}
                     >
                         {stage.icon}
                         {stage.effect && (
@@ -131,7 +131,7 @@ export default function GrowthTree({ createdAt, manualStreak, variant = "full", 
                     <motion.p
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="text-3xl font-black text-gray-900 dark:text-white"
+                        className="text-3xl font-black text-white"
                     >
                         {stage.label}
                     </motion.p>

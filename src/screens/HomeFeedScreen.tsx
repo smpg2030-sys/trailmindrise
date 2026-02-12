@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft, CheckCircle2, AlertCircle, Loader2, MessageCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useHomeRefresh } from "../context/HomeRefreshContext";
 import { Post, FriendRequest, AppNotification, CommunityStory } from "../types";
@@ -502,19 +502,77 @@ export default function HomeFeedScreen() {
         </div>
       </header>
 
-      <div className="sticky top-[73px] z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm px-4 py-3 border-b border-slate-100/50 dark:border-zinc-800 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2">
+      <header className="sticky top-0 z-20 bg-black/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between border-b border-slate-300">
+        <div className="flex items-center gap-4">
+          <AnimatePresence>
+            {showSearch ? (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "100%", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                className="flex-1"
+              >
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search Bodham"
+                    className="w-full bg-slate-100 text-white placeholder-slate-500 pl-10 pr-4 py-2 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 border border-transparent"
+                    onBlur={() => !searchQuery && setShowSearch(false)}
+                  />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.h1
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xl font-bold text-white tracking-tight"
+              >
+                Home
+              </motion.h1>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {!showSearch && (
+            <button
+              onClick={() => setShowSearch(true)}
+              className="p-2 text-white hover:bg-slate-200/10 rounded-full transition-colors"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          )}
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="p-2 text-white hover:bg-slate-200/10 rounded-full transition-colors relative"
+          >
+            <Bell className="w-5 h-5" />
+            {notifications.some(n => !n.read) && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-500 rounded-full border-2 border-black"></span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      <div className="sticky top-[53px] z-10 bg-black/90 backdrop-blur-sm border-b border-slate-300 overflow-x-auto no-scrollbar">
+        <div className="flex">
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 shadow-sm ${activeTab === tab
-                ? "bg-slate-800 text-white shadow-slate-200 dark:bg-white dark:text-black dark:shadow-none scale-105"
-                : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300 dark:bg-zinc-900 dark:text-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-700"
+              className={`flex-1 px-4 py-4 text-sm font-bold whitespace-nowrap transition-colors relative hover:bg-slate-200/10 ${activeTab === tab
+                ? "text-white"
+                : "text-slate-500"
                 }`}
             >
               {tab}
+              {activeTab === tab && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary-500 rounded-full" />
+              )}
             </button>
           ))}
         </div>
@@ -598,37 +656,39 @@ export default function HomeFeedScreen() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-zinc-800 group transition hover:shadow-md"
+                  className="border-b border-slate-300 p-4 hover:bg-slate-200/5 transition cursor-pointer"
                 >
-                  <div className="aspect-video bg-slate-100 dark:bg-zinc-800 relative overflow-hidden">
-                    {story.image_url ? (
-                      <img
-                        src={story.image_url}
-                        alt={story.title}
-                        className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">📰</div>
-                    )}
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider">
-                        Community
-                      </span>
+                  <div className="flex gap-4">
+                    <div className="aspect-video w-full bg-slate-100 dark:bg-zinc-800 relative overflow-hidden rounded-xl border border-slate-300 mb-3">
+                      {story.image_url ? (
+                        <img
+                          src={story.image_url}
+                          alt={story.title}
+                          className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl">📰</div>
+                      )}
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                          Community
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2 leading-tight group-hover:text-emerald-600 transition">
-                      {story.title}
-                    </h2>
-                    <p className="text-slate-600 dark:text-zinc-400 text-sm leading-relaxed mb-6 line-clamp-3">
-                      {story.description}
-                    </p>
-                    <button
-                      onClick={() => navigate(`/story/${story.id}`)}
-                      className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-black font-bold rounded-2xl hover:bg-slate-800 dark:hover:bg-zinc-200 transition shadow-lg shadow-slate-200 dark:shadow-none"
-                    >
-                      Read Full Story
-                    </button>
+                    <div className="p-6">
+                      <h2 className="text-lg font-bold text-white mb-2 leading-tight group-hover:underline decoration-white underline-offset-4">
+                        {story.title}
+                      </h2>
+                      <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                        {story.description}
+                      </p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/story/${story.id}`) }}
+                        className="text-primary-500 hover:text-primary-600 font-bold text-sm"
+                      >
+                        Read Full Story
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))
@@ -653,35 +713,39 @@ export default function HomeFeedScreen() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.1 }}
-                      className="bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-zinc-800 group"
+                      className="border-b border-slate-300 p-4 hover:bg-slate-200/5 transition"
                     >
-                      <div className="p-4 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400 font-bold text-xs uppercase">
-                          {item.author_name?.[0] || "U"}
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold border border-black">
+                            {item.author_name?.[0] || "U"}
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-800 dark:text-white text-sm">{item.author_name}</p>
-                          <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-white text-[15px]">{item.author_name}</span>
+                            <span className="text-slate-500 text-[14px]">@{item.author_name?.replace(/\s+/g, '').toLowerCase() || 'user'}</span>
+                            <span className="text-slate-500 text-[14px]">·</span>
+                            <span className="text-slate-500 text-[14px]">{new Date(item.created_at).toLocaleDateString()}</span>
+                          </div>
+
+                          <div className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner">
+                            <VideoPlayer
+                              src={item.video_url?.startsWith("/static") ? `${API_BASE}${item.video_url}` : (item.video_url || "")}
+                              className="h-full"
+                            />
+                          </div>
+
+                          {item.content && (
+                            <div className="p-4 pt-3">
+                              <p className="text-slate-700 dark:text-zinc-300 text-sm leading-relaxed">
+                                <span className="font-bold mr-2 text-slate-900 dark:text-white">{item.author_name}</span>
+                                {item.content}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      <div className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner">
-                        <VideoPlayer
-                          src={item.video_url?.startsWith("/static") ? `${API_BASE}${item.video_url}` : (item.video_url || "")}
-                          className="h-full"
-                        />
-                      </div>
-
-                      {item.content && (
-                        <div className="p-4 pt-3">
-                          <p className="text-slate-700 dark:text-zinc-300 text-sm leading-relaxed">
-                            <span className="font-bold mr-2 text-slate-900 dark:text-white">{item.author_name}</span>
-                            {item.content}
-                          </p>
-                        </div>
-                      )}
                     </motion.div>
                   );
                 }
@@ -692,43 +756,58 @@ export default function HomeFeedScreen() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-zinc-800 flex flex-col group transition-all duration-300 hover:shadow-md"
+                    className="border-b border-slate-300 p-4 hover:bg-slate-200/5 transition cursor-pointer"
                   >
-                    <div className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-zinc-800 flex items-center justify-center text-emerald-600 dark:text-white font-bold border border-emerald-100 dark:border-zinc-700 overflow-hidden">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold border border-black overflow-hidden">
                           {item.author_profile_pic ? (
                             <img src={item.author_profile_pic} alt="" className="w-full h-full object-cover" />
                           ) : (
                             item.author_name?.[0]?.toUpperCase() || "U"
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-800 dark:text-white text-sm leading-tight">{item.author_name}</p>
-                          <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </p>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-white text-[15px] hover:underline decoration-1">{item.author_name}</span>
+                          <span className="text-slate-500 text-[14px]">@{item.author_name?.replace(/\s+/g, '').toLowerCase() || 'user'}</span>
+                          <span className="text-slate-500 text-[14px]">·</span>
+                          <span className="text-slate-500 text-[14px]">{new Date(item.created_at).toLocaleDateString()}</span>
                         </div>
+
+                        {item.content && (
+                          <div className="mb-3">
+                            <p className="text-white text-[15px] leading-normal whitespace-pre-line">{item.content}</p>
+                          </div>
+                        )}
+
+                        {item.image_url && (
+                          <div className="mt-3">
+                            <div className="rounded-2xl overflow-hidden border border-slate-300">
+                              <img
+                                src={item.image_url.startsWith("http") ? item.image_url : (item.image_url.startsWith("/static") ? `${API_BASE}${item.image_url}` : item.image_url)}
+                                alt="Post content"
+                                className="w-full h-full object-cover max-h-[500px]"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Bar (Mock) */}
+                        <div className="flex items-center justify-between mt-3 max-w-md">
+                          <button className="flex items-center gap-2 group text-slate-500 hover:text-primary-500 transition-colors">
+                            <div className="p-2 rounded-full group-hover:bg-primary-500/10 transition-colors">
+                              <MessageCircle className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs">0</span>
+                          </button>
+                          {/* Add more icons if needed */}
+                        </div>
+
                       </div>
                     </div>
-
-                    {item.image_url && (
-                      <div className="px-4 pb-4">
-                        <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 border border-slate-50 dark:border-zinc-700">
-                          <img
-                            src={item.image_url.startsWith("http") ? item.image_url : (item.image_url.startsWith("/static") ? `${API_BASE}${item.image_url}` : item.image_url)}
-                            alt="Post content"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {item.content && (
-                      <div className="p-4 pt-0">
-                        <p className="text-slate-700 dark:text-zinc-300 text-[15px] leading-relaxed whitespace-pre-line">{item.content}</p>
-                      </div>
-                    )}
                   </motion.div>
                 );
               })

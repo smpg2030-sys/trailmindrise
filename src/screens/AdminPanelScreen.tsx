@@ -119,57 +119,57 @@ export default function AdminPanelScreen() {
   };
 
   return (
-    <div className="app-container min-h-screen bg-[#f8f9fa] p-4 pb-20">
+    <div className="app-container min-h-screen bg-black p-4 pb-20">
       <div className="flex items-center gap-4 mb-6">
-        <button type="button" onClick={() => navigate("/profile")} className="text-2xl text-slate-600">
+        <button type="button" onClick={() => navigate("/profile")} className="text-2xl text-white">
           ←
         </button>
-        <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2 text-green-600 mb-1">
+        <div className="bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-800">
+          <div className="flex items-center gap-2 text-white mb-1">
             <Users className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Total Users</span>
           </div>
-          <div className="text-2xl font-bold text-slate-800">{stats.total_users}</div>
+          <div className="text-2xl font-bold text-white">{stats.total_users}</div>
           <div className="flex gap-2 mt-2 text-xs text-slate-500">
             <span>📧 {stats.email_users || 0}</span>
             <span>📱 {stats.mobile_users || 0}</span>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2 text-amber-500 mb-1">
+        <div className="bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-800">
+          <div className="flex items-center gap-2 text-white mb-1">
             <FileText className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Pending</span>
           </div>
-          <div className="text-2xl font-bold text-slate-800">{stats.pending_moderation}</div>
+          <div className="text-2xl font-bold text-white">{stats.pending_moderation}</div>
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2 border-b border-slate-200 overflow-x-auto">
+      <div className="mb-4 flex gap-2 border-b border-slate-800 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("pending")}
-          className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "pending" ? "border-b-2 border-amber-500 text-amber-600" : "text-slate-500"}`}
+          className={`pb-2 px-4 font-bold text-sm whitespace-nowrap transition ${activeTab === "pending" ? "border-b-2 border-white text-white" : "text-slate-500"}`}
         >
           Pending Posts
         </button>
         <button
           onClick={() => setActiveTab("videos")}
-          className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "videos" ? "border-b-2 border-purple-500 text-purple-600" : "text-slate-500"}`}
+          className={`pb-2 px-4 font-bold text-sm whitespace-nowrap transition ${activeTab === "videos" ? "border-b-2 border-white text-white" : "text-slate-500"}`}
         >
           Videos
         </button>
         <button
           onClick={() => setActiveTab("history")}
-          className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "history" ? "border-b-2 border-blue-500 text-blue-600" : "text-slate-500"}`}
+          className={`pb-2 px-4 font-bold text-sm whitespace-nowrap transition ${activeTab === "history" ? "border-b-2 border-white text-white" : "text-slate-500"}`}
         >
           History
         </button>
         <button
           onClick={() => setActiveTab("users")}
-          className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "users" ? "border-b-2 border-green-500 text-green-600" : "text-slate-500"}`}
+          className={`pb-2 px-4 font-bold text-sm whitespace-nowrap transition ${activeTab === "users" ? "border-b-2 border-white text-white" : "text-slate-500"}`}
         >
           Users
         </button>
@@ -181,9 +181,9 @@ export default function AdminPanelScreen() {
             <button
               key={filter}
               onClick={() => setHistoryFilter(filter)}
-              className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${historyFilter === filter
-                ? "bg-slate-800 text-white border-slate-800"
-                : "bg-white text-slate-600 border-slate-200"
+              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${historyFilter === filter
+                ? "bg-white text-black border-white"
+                : "bg-black text-slate-500 border-slate-800"
                 }`}
             >
               {filter}
@@ -195,15 +195,15 @@ export default function AdminPanelScreen() {
       {loading ? (
         <div className="p-8 text-center text-slate-500">Loading data...</div>
       ) : activeTab === "users" ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-black rounded-2xl shadow-sm border border-slate-800 overflow-hidden">
           {users.length === 0 ? (
             <div className="p-8 text-center text-slate-500">No users found</div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-800">
               {users.map((u) => (
-                <div key={u.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                <div key={u.id} className="p-4 flex items-center justify-between hover:bg-slate-900 transition">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold overflow-hidden border border-slate-800">
                       {u.profile_pic ? (
                         <img src={u.profile_pic} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -211,15 +211,15 @@ export default function AdminPanelScreen() {
                       )}
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-800">{u.full_name || "Unknown"}</div>
+                      <div className="font-semibold text-white">{u.full_name || "Unknown"}</div>
                       <div className="text-xs text-slate-500">{u.email}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold uppercase tracking-tighter px-2 py-1 rounded ${u.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-tighter px-2 py-1 rounded ${u.role === 'admin' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}`}>
                       {u.role}
                     </span>
-                    {u.is_verified && <CheckCircle className="w-4 h-4 text-green-500" />}
+                    {u.is_verified && <CheckCircle className="w-4 h-4 text-emerald-500" />}
                   </div>
                 </div>
               ))}
@@ -235,25 +235,25 @@ export default function AdminPanelScreen() {
             </div>
           ) : (
             videos.map(video => (
-              <div key={video.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+              <div key={video.id} className="bg-black p-4 rounded-xl border border-slate-800 shadow-sm">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xs uppercase">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs uppercase border border-slate-800">
                       {video.author_name ? video.author_name[0] : "?"}
                     </div>
                     <div>
-                      <p className="font-bold text-sm text-slate-800">{video.author_name}</p>
+                      <p className="font-bold text-sm text-white">{video.author_name}</p>
                       {video.author_email && <p className="text-[10px] text-slate-500">{video.author_email}</p>}
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium text-slate-400">{new Date(video.created_at).toLocaleString()}</span>
+                  <span className="text-[10px] font-medium text-slate-500">{new Date(video.created_at).toLocaleString()}</span>
                 </div>
 
-                <h3 className="font-bold text-slate-800 mb-1 text-base leading-tight">
+                <h3 className="font-bold text-white mb-1 text-base leading-tight">
                   {video.title || "Untitled Video"}
                 </h3>
                 {video.caption && (
-                  <p className="text-xs text-slate-600 mb-3 italic">"{video.caption}"</p>
+                  <p className="text-xs text-slate-400 mb-3 italic">"{video.caption}"</p>
                 )}
 
                 <div className="bg-black rounded-2xl overflow-hidden aspect-[9/16] max-h-[500px] relative mb-6 border border-slate-100 shadow-inner group">
@@ -266,13 +266,13 @@ export default function AdminPanelScreen() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleVideoModeration(video.id, "approved")}
-                    className="flex-1 bg-emerald-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 active:scale-95"
+                    className="flex-1 bg-white text-black py-3 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95"
                   >
                     <CheckCircle className="w-4 h-4" /> Approve
                   </button>
                   <button
                     onClick={() => handleVideoModeration(video.id, "rejected")}
-                    className="flex-1 bg-rose-50 text-rose-600 py-3 rounded-xl text-sm font-bold hover:bg-rose-100 border border-rose-100 transition-all flex items-center justify-center gap-2 active:scale-95"
+                    className="flex-1 bg-black text-red-500 py-3 rounded-xl text-sm font-bold hover:bg-slate-900 border border-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95"
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>
@@ -290,10 +290,10 @@ export default function AdminPanelScreen() {
             </div>
           ) : (
             posts.map(post => (
-              <div key={post.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+              <div key={post.id} className="bg-black p-4 rounded-xl border border-slate-800 shadow-sm">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs overflow-hidden">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xs overflow-hidden border border-slate-800">
                       {post.author_profile_pic ? (
                         <img src={post.author_profile_pic} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -301,25 +301,25 @@ export default function AdminPanelScreen() {
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">{post.author_name}</p>
+                      <p className="font-semibold text-sm text-white">{post.author_name}</p>
                       {post.author_email && <p className="text-xs text-slate-500">{post.author_email}</p>}
-                      <p className="text-xs text-slate-400">{new Date(post.created_at).toLocaleString()}</p>
+                      <p className="text-xs text-slate-500">{new Date(post.created_at).toLocaleString()}</p>
                     </div>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${post.status === 'approved' ? 'bg-green-100 text-green-700' :
-                    post.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${post.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                    post.status === 'rejected' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                      'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                     }`}>
                     {post.status}
                   </span>
                 </div>
                 {post.content && (
-                  <p className="text-slate-800 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100 italic">
+                  <p className="text-white mb-4 bg-slate-900 p-3 rounded-lg border border-slate-800 italic">
                     {post.content}
                   </p>
                 )}
                 {post.image_url && (
-                  <div className="mt-3 bg-slate-900/5 rounded-xl overflow-hidden flex items-center justify-center">
+                  <div className="mt-3 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
                     <img
                       src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
                       alt="Post content"
@@ -347,13 +347,13 @@ export default function AdminPanelScreen() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleModeration(post.id, "approved")}
-                      className="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2"
+                      className="flex-1 bg-white text-black py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition flex items-center justify-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" /> Approve
                     </button>
                     <button
                       onClick={() => handleModeration(post.id, "rejected")}
-                      className="flex-1 bg-red-50 text-red-700 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition flex items-center justify-center gap-2"
+                      className="flex-1 bg-black text-red-500 py-2 rounded-lg text-sm font-semibold hover:bg-slate-900 border border-slate-800 transition flex items-center justify-center gap-2"
                     >
                       <XCircle className="w-4 h-4" /> Reject
                     </button>
@@ -363,7 +363,7 @@ export default function AdminPanelScreen() {
                 {activeTab === "history" && post.status === "approved" && (
                   <button
                     onClick={() => handleModeration(post.id, "rejected")}
-                    className="w-full bg-red-50 text-red-700 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition flex items-center justify-center gap-2"
+                    className="w-full bg-black text-red-500 py-2 rounded-lg text-sm font-semibold hover:bg-slate-900 border border-slate-800 transition flex items-center justify-center gap-2"
                   >
                     <XCircle className="w-4 h-4" /> Revoke Approval
                   </button>
@@ -372,7 +372,7 @@ export default function AdminPanelScreen() {
                 {activeTab === "history" && post.status === "rejected" && (
                   <button
                     onClick={() => handleModeration(post.id, "approved")}
-                    className="w-full bg-green-50 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2"
+                    className="w-full bg-white text-black py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition flex items-center justify-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" /> Approve (Undo Rejection)
                   </button>

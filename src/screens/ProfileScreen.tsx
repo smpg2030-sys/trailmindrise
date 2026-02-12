@@ -419,35 +419,35 @@ export default function ProfileScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full bg-white dark:bg-black min-h-screen transition-colors duration-300"
+      className="w-full bg-black min-h-screen"
     >
-      <header className="sticky top-0 z-20 bg-white/80 dark:bg-black/80 backdrop-blur-xl px-4 py-4 flex items-center justify-between border-b border-slate-100/50 dark:border-zinc-800 shadow-sm dark:shadow-none">
+      <header className="sticky top-0 z-20 bg-black/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between border-b border-slate-300">
         <button
           type="button"
           onClick={() => setShowSettings(true)}
-          className="p-2 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+          className="p-2 text-white hover:bg-slate-200/10 rounded-full transition-colors"
           aria-label="Settings"
         >
           <Settings className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Profile</h1>
+        <h1 className="text-xl font-bold text-white tracking-tight">Profile</h1>
         <button
           type="button"
-          className="p-2 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+          className="p-2 text-white hover:bg-slate-200/10 rounded-full transition-colors"
           aria-label="Menu"
         >
           <MoreVertical className="w-5 h-5" />
         </button>
       </header>
 
-      <div className="p-4 pt-8">
-        <div className="flex flex-col items-center text-center mb-8">
+      <div className="p-4">
+        <div className="flex flex-col items-start mb-6">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="relative inline-block mb-4"
+            className="relative inline-block mb-3"
           >
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-4xl font-bold text-white overflow-hidden shadow-2xl border-4 border-white ring-1 ring-slate-100">
+            <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-2 border-black">
               {targetUser.profile_pic ? (
                 <img src={targetUser.profile_pic} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -455,19 +455,19 @@ export default function ProfileScreen() {
               )}
             </div>
             {isOwnProfile && (
-              <label className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-slate-900 shadow-lg border-2 border-white flex items-center justify-center text-white cursor-pointer hover:bg-slate-800 transition-transform hover:scale-105">
+              <label className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-slate-900 border border-white flex items-center justify-center text-white cursor-pointer hover:bg-slate-800 transition-colors">
                 <input type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
                 <Camera className="w-4 h-4" />
               </label>
             )}
           </motion.div>
 
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
+          <h2 className="text-xl font-black text-white mb-0.5">
             {targetUser.full_name || targetUser.email.split("@")[0]}
           </h2>
-          <p className="text-slate-400 dark:text-zinc-500 text-sm font-medium mb-4">{targetUser.email}</p>
+          <p className="text-slate-500 text-sm mb-3">@{targetUser.email.split("@")[0]}</p>
 
-          <div className="w-full max-w-sm px-2">
+          <div className="w-full text-left">
             {isEditingBio ? (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -510,12 +510,9 @@ export default function ProfileScreen() {
                   }
                 }}
               >
-                <p className="text-slate-600 text-sm leading-relaxed px-2">
-                  {targetUser.bio || (isOwnProfile ? "Click to add a bio..." : "No bio yet")}
+                <p className="text-white text-[15px] leading-normal">
+                  {targetUser.bio || (isOwnProfile ? "Add a bio to your profile" : "")}
                 </p>
-                <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold">EDIT</span>
-                </div>
               </div>
             )}
           </div>
@@ -563,10 +560,10 @@ export default function ProfileScreen() {
             />
           </div>
         ) : (
-          <div className="mb-8 p-8 bg-slate-50 rounded-3xl border border-slate-100 text-center">
-            <Shield className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-            <p className="text-slate-700 font-bold mb-1">Growth Tree is private</p>
-            <p className="text-slate-400 text-sm">Become friends to see their mindful growth journey 🌳</p>
+          <div className="mb-8 p-8 bg-black rounded-3xl border border-slate-300 text-center">
+            <Shield className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+            <p className="text-white font-bold mb-1">Growth Tree is private</p>
+            <p className="text-slate-500 text-sm">Become friends to see their mindful growth journey 🌳</p>
           </div>
         )}
 
@@ -660,7 +657,7 @@ export default function ProfileScreen() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-4"
+              className=""
             >
               {loadingPosts ? (
                 <div className="flex justify-center py-12">
@@ -668,11 +665,8 @@ export default function ProfileScreen() {
                 </div>
               ) : myPosts.length === 0 ? (
                 <div className="flex flex-col items-center py-16 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center text-3xl mb-4">
-                    📝
-                  </div>
-                  <p className="text-slate-900 dark:text-white font-bold mb-1">No posts yet</p>
-                  <p className="text-slate-500 dark:text-zinc-500 text-sm">Valid posts you create will appear here.</p>
+                  <p className="text-white font-bold mb-1">No posts yet</p>
+                  <p className="text-slate-500 text-sm">Posts you create will appear here.</p>
                 </div>
               ) : (
                 myPosts.map((post, index) => (
@@ -681,42 +675,56 @@ export default function ProfileScreen() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-sm relative group hover:shadow-md transition-shadow"
+                    className="border-b border-slate-300 p-4 hover:bg-slate-200/5 transition cursor-pointer"
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(post)}
-                        <span className="text-[10px] font-medium text-slate-400 dark:text-zinc-500">{new Date(post.created_at).toLocaleDateString()}</span>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold border border-black overflow-hidden relative">
+                          {targetUser.profile_pic ? (
+                            <img src={targetUser.profile_pic} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            targetUser.full_name?.[0] || targetUser.email[0].toUpperCase()
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
-                        className="text-slate-300 dark:text-zinc-600 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <p className="text-slate-700 dark:text-zinc-200 text-sm mb-3 leading-relaxed">{post.content}</p>
-                    {post.image_url && (
-                      <div className="mt-3 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
-                        <img
-                          src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
-                          alt="Post content"
-                          className="w-full h-auto max-h-[300px] object-cover"
-                        />
-                      </div>
-                    )}
-                    {post.status === "rejected" && (
-                      <div className="bg-rose-50 p-3 rounded-xl mt-3 border border-rose-100">
-                        <p className="text-rose-700 font-bold text-xs mb-1 flex items-center gap-1">
-                          <span className="text-sm">⚠️</span> Community Guidelines Issue
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white text-[15px]">{targetUser.full_name || targetUser.email.split("@")[0]}</span>
+                            <span className="text-slate-500 text-[14px]">@{targetUser.email.split("@")[0]}</span>
+                            <span className="text-slate-500 text-[14px]">·</span>
+                            <span className="text-slate-500 text-[14px]">{new Date(post.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(post)}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
+                              className="text-slate-500 hover:text-rose-500 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <p className="text-white text-[15px] mb-3 leading-normal">{post.content}</p>
+
+                        {post.image_url && (
+                          <div className="mt-3 rounded-2xl overflow-hidden border border-slate-300">
+                            <img
+                              src={post.image_url.startsWith("/static") ? `${API_BASE}${post.image_url}` : post.image_url}
+                              alt="Post content"
+                              className="w-full h-auto max-h-[500px] object-cover"
+                            />
+                          </div>
+                        )}
+
                         {post.rejection_reason && (
-                          <p className="text-rose-600 text-xs pl-5">
+                          <p className="text-rose-500 text-xs mt-2">
                             Reason: {post.rejection_reason}
                           </p>
                         )}
                       </div>
-                    )}
+                    </div>
                   </motion.div>
                 ))
               )}
@@ -728,7 +736,7 @@ export default function ProfileScreen() {
               key="videos"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+              className="grid grid-cols-3 gap-1"
             >
               {loadingVideos ? (
                 <div className="col-span-full py-12 text-center text-slate-400">Loading videos...</div>
@@ -739,33 +747,22 @@ export default function ProfileScreen() {
                 </div>
               ) : (
                 myVideos.map(video => (
-                  <div key={video.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm relative group">
-                    <div className="aspect-[9/16] bg-black flex items-center justify-center overflow-hidden">
-                      <VideoPlayer
-                        src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
-                        className="w-full h-full"
-                      />
+                  <div key={video.id} className="aspect-[9/16] bg-black relative group cursor-pointer border border-slate-300">
+                    <VideoPlayer
+                      src={video.video_url.startsWith("/static") ? `${API_BASE}${video.video_url}` : video.video_url}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 right-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteVideo(video.id); }}
+                        className="bg-black/50 text-white p-1 rounded-full hover:bg-rose-500/80 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="p-3 bg-white dark:bg-zinc-900">
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate mb-1">
-                        {video.title || "Untitled Reel"}
-                      </h4>
-                      {video.caption && (
-                        <p className="text-[10px] text-slate-500 line-clamp-2 mb-2 italic">
-                          "{video.caption}"
-                        </p>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                          Approved
-                        </span>
-                        <button
-                          onClick={() => handleDeleteVideo(video.id)}
-                          className="p-1.5 text-slate-300 hover:text-rose-500 rounded-full hover:bg-rose-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                      <p className="text-white text-xs font-bold truncate">{video.title || "Untitled"}</p>
+                      <p className="text-white/70 text-[10px] truncate">{video.caption}</p>
                     </div>
                   </div>
                 ))
@@ -781,10 +778,10 @@ export default function ProfileScreen() {
               exit={{ opacity: 0, x: -20 }}
               className="flex flex-col items-center py-16 text-center"
             >
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-3xl mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl mb-4 border border-slate-700">
                 🔖
               </div>
-              <p className="text-slate-900 font-bold mb-1">No saved items</p>
+              <p className="text-white font-bold mb-1">No saved items</p>
               <p className="text-slate-500 text-sm">Save posts to read them later.</p>
             </motion.div>
           )}
@@ -798,10 +795,10 @@ export default function ProfileScreen() {
             >
               {friendsList.length === 0 ? (
                 <div className="flex flex-col items-center py-16 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-3xl mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl mb-4 border border-slate-700">
                     🤝
                   </div>
-                  <p className="text-slate-900 font-bold mb-1">No friends yet</p>
+                  <p className="text-white font-bold mb-1">No friends yet</p>
                   <p className="text-slate-500 text-sm">Connect with others to grow together!</p>
                 </div>
               ) : (
@@ -809,10 +806,10 @@ export default function ProfileScreen() {
                   <div
                     key={friend.id}
                     onClick={() => navigate(`/profile/${friend.id}`)}
-                    className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    className="flex items-center justify-between p-4 border-b border-slate-300 hover:bg-slate-200/5 transition cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold overflow-hidden border-2 border-white shadow-sm">
+                      <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold overflow-hidden border border-black">
                         {friend.profile_pic ? (
                           <img src={friend.profile_pic} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -820,12 +817,9 @@ export default function ProfileScreen() {
                         )}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800 text-sm">{friend.full_name || "User"}</p>
-                        <p className="text-xs text-slate-400">{friend.email}</p>
+                        <p className="font-bold text-white text-[15px]">{friend.full_name || "User"}</p>
+                        <p className="text-[14px] text-slate-500">@{friend.email.split('@')[0]}</p>
                       </div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
-                      →
                     </div>
                   </div>
                 ))

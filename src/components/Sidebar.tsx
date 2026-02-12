@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Home, Compass, MessageCircle, Zap, User, Plus, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useHomeRefresh } from "../context/HomeRefreshContext";
@@ -12,79 +12,82 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-    const { user, logout } = useAuth();
+    const { user: currentUser, logout } = useAuth();
     const navigate = useNavigate();
     const { triggerRefresh } = useHomeRefresh();
+    const location = useLocation();
 
     return (
-        <aside className="w-64 h-screen sticky top-0 bg-white dark:bg-black border-r border-slate-200 dark:border-zinc-800 flex flex-col p-4 z-40 transition-colors duration-300">
-            <div className="mb-8 px-2">
-                <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-white dark:to-zinc-400 tracking-tight">
+        <aside className="w-64 h-screen sticky top-0 bg-black border-r border-slate-300 flex flex-col p-4 z-40">
+            <div className="mb-4 px-3 py-2">
+                <h1 className="text-3xl font-black text-white tracking-tight">
                     Bodham
                 </h1>
             </div>
 
-            <nav className="flex-1 space-y-2">
-                {navItems.map(({ to, label, Icon }) => (
-                    <NavLink
-                        key={to}
-                        to={to}
-                        end={to === "/"}
-                        onClick={(e) => {
-                            if (to === "/") {
-                                // If we are already on home, trigger refresh and scroll to top
-                                if (window.location.pathname === "/") {
-                                    e.preventDefault();
-                                    triggerRefresh();
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+            <nav className="flex-1 space-y-1">
+                {navItems.map(({ to, label, Icon }) => {
+                    const isActive = location.pathname === to;
+                    return (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            end={to === "/"}
+                            onClick={(e) => {
+                                if (to === "/") {
+                                    if (window.location.pathname === "/") {
+                                        e.preventDefault();
+                                        triggerRefresh();
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }
                                 }
+                            }}
+                            className={({ isActive }) =>
+                                `flex items-center gap-4 px-4 py-3 rounded-full transition-colors ${isActive
+                                    ? "font-bold text-white bg-transparent"
+                                    : "font-normal text-slate-100 hover:bg-slate-200/10"
+                                }`
                             }
-                        }}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${isActive
-                                ? "bg-emerald-50 text-emerald-600 shadow-sm dark:bg-zinc-900 dark:text-white dark:shadow-none"
-                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-zinc-500 dark:hover:bg-zinc-900 dark:hover:text-zinc-200"
-                            }`
-                        }
-                    >
-                        <Icon className="w-5 h-5" />
-                        <span>{label}</span>
-                    </NavLink>
-                ))}
+                        >
+                            <Icon
+                                className={`w-7 h-7 ${isActive ? "fill-current" : ""}`}
+                                strokeWidth={isActive ? 2.5 : 2}
+                            />
+                            <span className="text-xl">{label}</span>
+                        </NavLink>
+                    );
+                })}
 
                 <button
                     onClick={() => {
                         navigate("/?create=true");
                     }}
-                    className="w-full mt-6 flex items-center justify-center gap-2 bg-slate-900 text-white dark:bg-white dark:text-black p-4 rounded-2xl font-bold hover:bg-slate-800 dark:hover:bg-zinc-200 transition shadow-lg shadow-slate-200 dark:shadow-none"
+                    className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-black p-4 rounded-full font-bold hover:bg-opacity-90 transition shadow-none"
                 >
                     <Plus className="w-5 h-5" />
-                    <span>Create Post</span>
+                    <span>Post</span>
                 </button>
             </nav>
 
-            <div className="mt-auto border-t border-slate-100 dark:border-zinc-800 pt-4 space-y-4">
-                <div className="flex items-center gap-3 px-2">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-zinc-900 flex items-center justify-center text-emerald-600 dark:text-white font-bold overflow-hidden border border-emerald-50 dark:border-zinc-800">
-                        {user?.profile_pic ? (
-                            <img src={user.profile_pic} alt="" className="w-full h-full object-cover" />
+            <div className="mt-auto pt-4">
+                <div className="flex items-center gap-3 px-3 py-3 rounded-full hover:bg-slate-200/10 cursor-pointer transition group">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold border border-black">
+                        {currentUser?.profile_pic ? (
+                            <img src={currentUser.profile_pic} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
-                            user?.full_name?.[0] || user?.email?.[0]?.toUpperCase()
+                            currentUser?.full_name?.[0] || currentUser?.email?.[0]?.toUpperCase() || "U"
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user?.full_name || "User"}</p>
-                        <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 truncate">{user?.email}</p>
+                        <p className="font-bold text-white text-sm truncate">
+                            {currentUser?.full_name || "User"}
+                        </p>
+                        <p className="text-slate-500 text-sm truncate">@{currentUser?.email?.split('@')[0]}</p>
                     </div>
+                    <button onClick={logout} className="text-slate-500 hover:text-white">
+                        <LogOut className="w-5 h-5" />
+                    </button>
                 </div>
-
-                <button
-                    onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-zinc-900 transition-colors"
-                >
-                    <LogOut className="w-5 h-5" />
-                    <span>Logout</span>
-                </button>
             </div>
         </aside>
     );

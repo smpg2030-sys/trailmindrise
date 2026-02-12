@@ -126,16 +126,16 @@ export default function JournalScreen() {
     );
 
     return (
-        <div className="min-h-screen bg-[#faf9f6] text-slate-800 pb-24 lg:pb-8">
+        <div className="min-h-screen bg-black text-white pb-24 lg:pb-8">
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-stone-100 flex items-center justify-between p-4 px-6">
+            <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-slate-300 flex items-center justify-between p-4 px-6">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-stone-50 rounded-full transition-colors text-stone-500">
+                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-white">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-serif font-bold text-stone-800">My Journal</h1>
-                        <p className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Private Sanctuary</p>
+                        <h1 className="text-xl font-bold text-white">My Journal</h1>
+                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Private Sanctuary</p>
                     </div>
                 </div>
                 <button
@@ -143,9 +143,9 @@ export default function JournalScreen() {
                         setCurrentEntry({ title: "", content: "", date: new Date().toISOString() });
                         setIsEditing(true);
                     }}
-                    className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-200 hover:scale-105 transition-transform"
+                    className="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center border border-slate-600 hover:bg-slate-700 transition-colors"
                 >
-                    <Plus className="w-6 h-6" />
+                    <Plus className="w-5 h-5" />
                 </button>
             </header>
 
@@ -154,11 +154,11 @@ export default function JournalScreen() {
                     <div className="space-y-8">
                         {/* Search */}
                         <div className="relative group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-emerald-500 transition-colors" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-white transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Search through your memories..."
-                                className="w-full pl-12 pr-4 py-4 bg-white border-0 rounded-3xl shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium text-stone-700"
+                                className="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-full shadow-sm focus:ring-0 focus:border-slate-600 outline-none transition-all font-medium text-white placeholder:text-slate-600"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -170,12 +170,12 @@ export default function JournalScreen() {
                                 <p className="text-stone-400 font-serif italic">Gathering your thoughts...</p>
                             </div>
                         ) : entries.length === 0 ? (
-                            <div className="text-center py-20 px-8 bg-white rounded-[40px] shadow-sm border border-stone-50">
-                                <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-500">
-                                    <Book className="w-10 h-10" />
+                            <div className="text-center py-20 px-8 bg-black rounded-3xl border border-slate-300">
+                                <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 text-white border border-slate-800">
+                                    <Book className="w-8 h-8" />
                                 </div>
-                                <h3 className="text-xl font-serif font-bold text-stone-800 mb-2">Begin your story</h3>
-                                <p className="text-stone-500 max-w-sm mx-auto leading-relaxed">
+                                <h3 className="text-xl font-bold text-white mb-2">Begin your story</h3>
+                                <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
                                     Your journal is a safe space for your digital thoughts. Click the plus button to write your first entry.
                                 </p>
                             </div>
@@ -188,15 +188,15 @@ export default function JournalScreen() {
                                         transition={{ delay: idx * 0.05 }}
                                         key={entry.id}
                                         onClick={() => startEditing(entry)}
-                                        className="group bg-white rounded-[32px] p-6 shadow-sm border border-stone-100 hover:shadow-xl hover:shadow-emerald-500/5 transition-all cursor-pointer relative overflow-hidden"
+                                        className="group bg-black rounded-xl p-6 border border-slate-300 hover:bg-slate-900/10 transition-all cursor-pointer relative overflow-hidden"
                                     >
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
-                                                <div className="flex items-center gap-2 text-stone-400 text-xs mb-1 font-bold tracking-tighter uppercase">
+                                                <div className="flex items-center gap-2 text-slate-500 text-xs mb-1 font-bold tracking-tighter uppercase">
                                                     <Calendar className="w-3.5 h-3.5" />
                                                     {new Date(entry.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                                 </div>
-                                                <h3 className="text-xl font-serif font-bold text-stone-800">{entry.title}</h3>
+                                                <h3 className="text-xl font-bold text-white">{entry.title}</h3>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
@@ -210,7 +210,7 @@ export default function JournalScreen() {
                                                 </button>
                                             </div>
                                         </div>
-                                        <p className="text-stone-600 line-clamp-3 leading-relaxed font-medium">
+                                        <p className="text-slate-300 line-clamp-3 leading-relaxed font-medium">
                                             {entry.content}
                                         </p>
                                         <div className="mt-4 flex items-center justify-between">
@@ -229,28 +229,28 @@ export default function JournalScreen() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-[40px] shadow-2xl border border-stone-50 overflow-hidden"
+                        className="bg-black rounded-3xl border border-slate-300 overflow-hidden"
                     >
-                        <div className="p-8 border-b border-stone-50 flex items-center justify-between bg-stone-50/30">
+                        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-black">
                             <input
                                 type="text"
                                 placeholder="Give your memory a title..."
-                                className="bg-transparent border-0 text-2xl font-serif font-black focus:ring-0 outline-none w-full placeholder:text-stone-300 text-stone-800"
+                                className="bg-transparent border-0 text-2xl font-bold text-white focus:ring-0 outline-none w-full placeholder:text-slate-600"
                                 value={currentEntry.title}
                                 onChange={(e) => setCurrentEntry({ ...currentEntry, title: e.target.value })}
                             />
                             <button
                                 onClick={() => setIsEditing(false)}
-                                className="p-2 hover:bg-stone-200/50 rounded-full transition-colors text-stone-400"
+                                className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400"
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
-                        <div className="p-8 pb-4 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px]">
+                        <div className="p-6 pb-4 bg-black">
                             <textarea
                                 placeholder="Pour your thoughts onto the page..."
-                                className="w-full h-[50vh] bg-transparent border-0 focus:ring-0 outline-none resize-none font-medium leading-relaxed text-lg text-stone-700 placeholder:text-stone-300"
+                                className="w-full h-[50vh] bg-transparent border-0 focus:ring-0 outline-none resize-none font-medium leading-relaxed text-lg text-white placeholder:text-slate-700"
                                 value={currentEntry.content}
                                 onChange={(e) => setCurrentEntry({ ...currentEntry, content: e.target.value })}
                                 autoFocus

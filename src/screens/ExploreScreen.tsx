@@ -35,10 +35,10 @@ export default function ExploreScreen() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#f8fafc]">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4 py-4 flex items-center justify-between shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Explore</h1>
-        <button type="button" className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Notifications">
+    <div className="w-full min-h-screen bg-black">
+      <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-slate-300 px-4 py-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-white tracking-tight">Explore</h1>
+        <button type="button" className="p-2 text-white hover:bg-slate-200/10 rounded-full transition-colors" aria-label="Notifications">
           <Bell className="w-5 h-5" />
         </button>
       </header>
@@ -47,7 +47,7 @@ export default function ExploreScreen() {
         <div className="mb-6">
           <input
             type="text"
-            className="w-full p-3 bg-slate-100 rounded-xl border-0"
+            className="w-full p-3 bg-slate-900 rounded-full border border-slate-800 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary-500"
             placeholder="Search meditations, journals..."
           />
         </div>
@@ -55,21 +55,21 @@ export default function ExploreScreen() {
         <button
           type="button"
           onClick={() => navigate("/support")}
-          className="w-full mb-6 p-4 rounded-xl bg-green-100 flex items-center justify-between hover:bg-green-200 transition"
+          className="w-full mb-6 p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between hover:bg-slate-800 transition"
         >
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-pink-400 rounded-full flex items-center justify-center text-2xl">
               💗
             </div>
             <div className="text-left">
-              <div className="font-semibold text-slate-800">Need immediate support?</div>
-              <div className="text-sm text-slate-600">We're here for you 24/7</div>
+              <div className="font-semibold text-white">Need immediate support?</div>
+              <div className="text-sm text-slate-500">We're here for you 24/7</div>
             </div>
           </div>
           <span className="text-slate-500">→</span>
         </button>
 
-        <h2 className="text-xl font-bold text-slate-800 mb-4">Categories</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Categories</h2>
         <div className="grid grid-cols-2 gap-4">
           {CATEGORIES.map((cat) => (
             <button
@@ -80,11 +80,11 @@ export default function ExploreScreen() {
                 if (cat.title === "Community") navigate("/community-stories");
                 if (cat.title === "Journaling") navigate("/journal");
               }}
-              className={`${cat.bg} rounded-xl p-6 text-left transition hover:opacity-90`}
+              className="bg-black border border-slate-300 rounded-xl p-6 text-left transition hover:bg-slate-900"
             >
               <span className="text-3xl block mb-2">{cat.icon}</span>
-              <div className="font-bold text-slate-800">{cat.title}</div>
-              <div className="text-sm text-slate-600">{cat.subtitle}</div>
+              <div className="font-bold text-white">{cat.title}</div>
+              <div className="text-sm text-slate-500">{cat.subtitle}</div>
             </button>
           ))}
         </div>

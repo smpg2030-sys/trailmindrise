@@ -116,7 +116,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <div className="min-h-screen bg-[#f8f9fa] dark:bg-black transition-colors duration-300">
+          <div className="min-h-screen bg-black text-white selection:bg-slate-300 selection:text-black">
             <AppRoutes />
           </div>
         </ThemeProvider>

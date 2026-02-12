@@ -43,19 +43,19 @@ export default function StoryDetailScreen() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
             </div>
         );
     }
 
     if (error || !story) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
                 <div className="text-xl text-slate-500 mb-4">{error || "Story not found"}</div>
                 <button
                     onClick={() => navigate(-1)}
-                    className="px-6 py-2 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition"
+                    className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-slate-200 transition"
                 >
                     Go Back
                 </button>
@@ -64,12 +64,12 @@ export default function StoryDetailScreen() {
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-black">
             {/* Header with back button */}
-            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-4">
+            <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-slate-800 px-4 py-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center text-slate-600 hover:text-slate-900 transition"
+                    className="flex items-center text-white hover:text-slate-300 transition"
                 >
                     <ArrowLeft className="w-5 h-5 mr-2" />
                     Back to Explore
@@ -78,7 +78,7 @@ export default function StoryDetailScreen() {
 
             <article className="max-w-3xl mx-auto px-4 py-8">
                 {/* Hero Image */}
-                <div className="w-full aspect-video rounded-2xl overflow-hidden mb-8 shadow-sm bg-slate-100">
+                <div className="w-full aspect-video rounded-2xl overflow-hidden mb-8 shadow-sm bg-slate-900 border border-slate-800">
                     {story.image_url ? (
                         <img
                             src={story.image_url}
@@ -86,24 +86,24 @@ export default function StoryDetailScreen() {
                             className="w-full h-full object-cover"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-6xl bg-violet-50">
+                        <div className="w-full h-full flex items-center justify-center text-6xl text-slate-700">
                             📰
                         </div>
                     )}
                 </div>
 
                 {/* Title and Meta */}
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-tight">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
                     {story.title}
                 </h1>
 
-                <div className="flex flex-wrap gap-4 items-center text-sm text-slate-500 mb-8 pb-8 border-b border-slate-100">
+                <div className="flex flex-wrap gap-4 items-center text-sm text-slate-500 mb-8 pb-8 border-b border-slate-800">
                     {story.author && (
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
-                                <User className="w-4 h-4 text-violet-600" />
+                            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800">
+                                <User className="w-4 h-4 text-white" />
                             </div>
-                            <span className="font-medium text-slate-700">{story.author}</span>
+                            <span className="font-medium text-slate-300">{story.author}</span>
                         </div>
                     )}
                     {story.created_at && (
@@ -115,13 +115,13 @@ export default function StoryDetailScreen() {
                 </div>
 
                 {/* Description/Intro */}
-                <div className="text-xl text-slate-600 leading-relaxed mb-8 font-medium">
+                <div className="text-xl text-slate-300 leading-relaxed mb-8 font-medium">
                     {story.description}
                 </div>
 
                 {/* Main Content */}
-                <div className="prose prose-lg prose-slate max-w-none">
-                    <div className="whitespace-pre-line text-slate-800 leading-8">
+                <div className="prose prose-lg prose-invert max-w-none">
+                    <div className="whitespace-pre-line text-slate-300 leading-8">
                         {story.content}
                     </div>
                 </div>

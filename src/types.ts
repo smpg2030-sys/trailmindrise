@@ -56,6 +56,7 @@ export interface AppNotification {
     message: string;
     type: "friend_request" | "request_accepted" | "general";
     created_at: string;
+    read?: boolean;
 }
 
 export interface CommunityStory {

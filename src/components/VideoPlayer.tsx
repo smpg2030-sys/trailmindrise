@@ -95,7 +95,7 @@ export default function VideoPlayer({ src, poster, className = "", autoPlay = fa
 
     return (
         <div
-            className={`relative group bg-black rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-violet-500 ${className}`}
+            className={`relative group bg-black rounded-2xl overflow-hidden border border-slate-800 focus-within:ring-2 focus-within:ring-white ${className}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => isPlaying && setShowControls(false)}
         >
@@ -129,24 +129,23 @@ export default function VideoPlayer({ src, poster, className = "", autoPlay = fa
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-                    {/* Progress Bar */}
                     <input
                         type="range"
                         min="0"
                         max="100"
                         value={progress || 0}
                         onChange={handleProgressChange}
-                        className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-violet-500 hover:h-1.5 transition-all"
+                        className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-white hover:h-1.5 transition-all"
                     />
 
                     <div className="flex items-center justify-between text-white drop-shadow-md">
                         <div className="flex items-center gap-4">
-                            <button onClick={togglePlay} className="hover:text-violet-400">
+                            <button onClick={togglePlay} className="hover:text-slate-300 transition">
                                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
                             </button>
 
                             <div className="flex items-center gap-2 group/volume">
-                                <button onClick={toggleMute} className="hover:text-violet-400">
+                                <button onClick={toggleMute} className="hover:text-slate-300 transition">
                                     {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                                 </button>
                                 <input
@@ -165,7 +164,7 @@ export default function VideoPlayer({ src, poster, className = "", autoPlay = fa
                             </span>
                         </div>
 
-                        <button onClick={toggleFullscreen} className="hover:text-violet-400">
+                        <button onClick={toggleFullscreen} className="hover:text-slate-300 transition">
                             <Maximize2 className="w-5 h-5" />
                         </button>
                     </div>

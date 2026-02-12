@@ -35,18 +35,18 @@ export default function CommunityStoriesPreviewScreen() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#f8fafc]">
-            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4 py-4 flex items-center justify-between shadow-sm">
+        <div className="min-h-screen bg-black">
+            <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-slate-300 px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                        className="p-2 text-white hover:bg-slate-900 rounded-full transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-xl font-bold text-slate-800 tracking-tight">Community Stories</h1>
+                    <h1 className="text-xl font-bold text-white tracking-tight">Community Stories</h1>
                 </div>
-                <BookOpen className="w-6 h-6 text-violet-600" />
+                <BookOpen className="w-6 h-6 text-white" />
             </header>
 
             <main className="p-4 max-w-2xl mx-auto space-y-6">
@@ -67,39 +67,39 @@ export default function CommunityStoriesPreviewScreen() {
                 ) : (
                     <div className="grid gap-6">
                         {stories.map((story) => (
-                            <div key={story.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group transition hover:shadow-md">
-                                <div className="aspect-video bg-slate-100 relative overflow-hidden">
+                            <div key={story.id} className="bg-black rounded-3xl overflow-hidden border border-slate-800 group transition hover:bg-slate-900/10">
+                                <div className="aspect-video bg-slate-900 relative overflow-hidden border-b border-slate-800">
                                     {story.image_url ? (
                                         <img
                                             src={story.image_url}
                                             alt={story.title}
-                                            className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                                            className="w-full h-full object-cover transition duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-4xl">📰</div>
+                                        <div className="w-full h-full flex items-center justify-center text-4xl text-slate-700">📰</div>
                                     )}
                                     <div className="absolute top-4 left-4">
-                                        <span className="bg-violet-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                                        <span className="bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-slate-700 uppercase tracking-wider">
                                             Community
                                         </span>
                                     </div>
                                 </div>
                                 <div className="p-6">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Clock className="w-3 h-3 text-slate-400" />
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <Clock className="w-3 h-3 text-slate-500" />
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                                             {story.created_at ? new Date(story.created_at).toLocaleDateString() : 'New Story'}
                                         </span>
                                     </div>
-                                    <h2 className="text-2xl font-bold text-slate-800 mb-3 leading-tight group-hover:text-violet-600 transition">
+                                    <h2 className="text-2xl font-bold text-white mb-3 leading-tight group-hover:underline decoration-1 underline-offset-4 transition">
                                         {story.title}
                                     </h2>
-                                    <p className="text-slate-600 leading-relaxed mb-6 line-clamp-3">
+                                    <p className="text-slate-400 leading-relaxed mb-6 line-clamp-3">
                                         {story.description}
                                     </p>
                                     <button
                                         onClick={() => navigate(`/story/${story.id}`)}
-                                        className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition shadow-lg shadow-slate-200"
+                                        className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-slate-200 transition"
                                     >
                                         Read Full Story
                                     </button>
