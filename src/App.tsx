@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import GoalsScreen from "./screens/GoalsScreen";
 import LoginScreen from "./screens/LoginScreen";
@@ -114,9 +115,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen bg-[#f8f9fa]">
-          <AppRoutes />
-        </div>
+        <ThemeProvider>
+          <div className="min-h-screen bg-[#f8f9fa] dark:bg-black transition-colors duration-300">
+            <AppRoutes />
+          </div>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

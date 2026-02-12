@@ -187,10 +187,10 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-center mb-1">Bodham</h1>
-        <p className="text-center text-sm text-slate-500 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-black dark:to-zinc-900 p-6 transition-colors duration-300">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl shadow-xl border border-slate-100 dark:border-zinc-900 p-8">
+        <h1 className="text-2xl font-bold text-center mb-1 text-slate-800 dark:text-white">Bodham</h1>
+        <p className="text-center text-sm text-slate-500 dark:text-zinc-500 mb-6">
           {mode === "login" && "Sign in to your account"}
           {mode === "register" && "Create an account"}
           {mode === "forgot-request" && "Reset your password"}
@@ -253,7 +253,7 @@ export default function LoginScreen() {
           {mode === "register" && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-zinc-300">
                   Full name
                 </label>
                 <input
@@ -272,7 +272,7 @@ export default function LoginScreen() {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     disabled={isPhoneVerified}
-                    className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                    className="flex-1 px-4 py-2 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-600"
                     placeholder="Enter mobile number"
                   />
                   {!isPhoneVerified && (
@@ -293,7 +293,7 @@ export default function LoginScreen() {
                       type="text"
                       value={phoneOtp}
                       onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className="flex-1 px-4 py-2 bg-white rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition"
+                      className="flex-1 px-4 py-2 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-600"
                       placeholder="Enter 6-digit OTP"
                     />
                     <button
@@ -318,7 +318,7 @@ export default function LoginScreen() {
 
           {(mode === "login" || mode === "register" || mode === "forgot-request" || mode === "forgot-reset") && (
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-zinc-300">
                 {mode === "register" ? "Email Address" : "Email or Mobile"}
               </label>
               <input
@@ -357,7 +357,7 @@ export default function LoginScreen() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="input-field pr-10"
+                  className="input-field pr-10 dark:bg-zinc-900 dark:border-zinc-800 dark:text-white dark:placeholder-zinc-600"
                   placeholder="••••••••"
                 />
                 <button
@@ -437,7 +437,7 @@ export default function LoginScreen() {
               setMessage(null);
               setMode("login");
             }}
-            className="text-sm text-slate-600 hover:text-green-600 font-medium"
+            className="text-sm text-slate-600 hover:text-green-600 dark:text-zinc-400 dark:hover:text-emerald-400 font-medium"
           >
             {mode === "login"
               ? <span onClick={(e) => { e.stopPropagation(); setMode("register"); }}>Don't have an account? Register</span>

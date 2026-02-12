@@ -10,7 +10,7 @@ export default function WelcomeScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="app-container flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6 relative overflow-hidden"
+      className="app-container flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-black dark:via-zinc-900 dark:to-zinc-950 p-6 relative overflow-hidden transition-colors duration-300"
     >
       {/* Background blobs */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
@@ -22,8 +22,8 @@ export default function WelcomeScreen() {
         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         className="relative mb-12"
       >
-        <div className="absolute inset-0 bg-emerald-300 rounded-full blur-xl opacity-20 animate-pulse"></div>
-        <div className="bg-white rounded-full w-48 h-48 flex items-center justify-center shadow-premium relative z-10 glass-card border-none">
+        <div className="absolute inset-0 bg-emerald-300 dark:bg-emerald-900/30 rounded-full blur-xl opacity-20 animate-pulse"></div>
+        <div className="bg-white dark:bg-zinc-900 rounded-full w-48 h-48 flex items-center justify-center shadow-premium relative z-10 glass-card border-none">
           <div className="text-emerald-500">
             <svg
               className="w-24 h-24 animate-float"
@@ -44,12 +44,12 @@ export default function WelcomeScreen() {
         transition={{ delay: 0.4 }}
         className="text-center z-10"
       >
-        <h1 className="text-5xl font-bold text-slate-800 mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">
+        <h1 className="text-5xl font-bold text-slate-800 dark:text-white mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-zinc-400">
           Bodham
         </h1>
-        <p className="text-slate-600 text-lg px-6 mb-12 leading-relaxed max-w-xs mx-auto">
+        <p className="text-slate-600 dark:text-zinc-400 text-lg px-6 mb-12 leading-relaxed max-w-xs mx-auto">
           Your peaceful space for <br />
-          <span className="font-semibold text-emerald-600">daily well-being</span>.
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400">daily well-being</span>.
         </p>
       </motion.div>
 
@@ -61,7 +61,7 @@ export default function WelcomeScreen() {
         whileTap={{ scale: 0.98 }}
         type="button"
         onClick={() => navigate("/goals")}
-        className="w-full max-w-xs py-4 rounded-2xl font-bold text-white bg-slate-900 shadow-xl shadow-slate-200 hover:shadow-2xl transition-all z-10 flex items-center justify-center gap-2 group"
+        className="w-full max-w-xs py-4 rounded-2xl font-bold text-white dark:text-black bg-slate-900 dark:bg-white shadow-xl shadow-slate-200 dark:shadow-none hover:shadow-2xl transition-all z-10 flex items-center justify-center gap-2 group"
       >
         <span>Get Started</span>
         <span className="group-hover:translate-x-1 transition-transform">→</span>
