@@ -229,7 +229,7 @@ export default function HomeFeedScreen() {
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [pendingItem]);
+  }, [pendingItem?.id, pendingItem?.status, pendingItem?.type]);
 
   // Steady Progress Animation
   useEffect(() => {
@@ -482,7 +482,7 @@ export default function HomeFeedScreen() {
                       }`}>
                       {pendingItem.status === 'pending' ? 'Reviewing your reflection...' :
                         pendingItem.status === 'approved' ? 'Successfully posted' :
-                          'Failed to upload'}
+                          pendingItem.error || 'Failed to upload'}
                     </span>
                   </div>
                   {pendingItem.status === 'rejected' && (
@@ -506,9 +506,10 @@ export default function HomeFeedScreen() {
                   />
                 </div>
 
-                {pendingItem.error && (
-                  <p className="text-xs font-medium text-red-600 animate-pulse">
-                    {pendingItem.error}
+                {/* Keep redundant pulse for extra visibility if rejected */}
+                {pendingItem.status === 'rejected' && pendingItem.error && (
+                  <p className="text-[10px] uppercase font-black text-red-500 animate-pulse tracking-tight">
+                    Post Violation Detected
                   </p>
                 )}
               </div>
