@@ -30,6 +30,7 @@ export default function HomeFeedScreen() {
   const [isVideo, setIsVideo] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [pendingItem, setPendingItem] = useState<{ id: string, type: 'post' | 'video', status: 'pending' | 'approved' | 'rejected', progress: number, error?: string } | null>(null);
+  const [submissionFeedback, setSubmissionFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
@@ -214,13 +215,14 @@ export default function HomeFeedScreen() {
         if (res.ok) {
           const data = await res.json();
           if (data.status === 'approved') {
-            setPendingItem(prev => prev ? { ...prev, status: 'approved', progress: 100 } : null);
-            fetchData(); // Refresh feed to show the new post
-            // Auto-clear after 3 seconds
-            setTimeout(() => setPendingItem(null), 3500);
+            setPendingItem(null); // Clear progress bar immediately
+            setSubmissionFeedback({ type: 'success', message: 'Successfully posted' });
+            fetchData(); // Refresh feed
+            setTimeout(() => setSubmissionFeedback(null), 5000);
           } else if (data.status === 'rejected') {
-            setPendingItem(prev => prev ? { ...prev, status: 'rejected', progress: 100, error: "Failed to upload the post because it is against our community guidelines" } : null);
-            // Don't auto-clear, let the user see the error
+            setPendingItem(null); // Clear progress bar immediately
+            setSubmissionFeedback({ type: 'error', message: 'Unable to post because this is against our community guidelines' });
+            setTimeout(() => setSubmissionFeedback(null), 5000);
           }
         }
       } catch (err) {
@@ -453,9 +455,33 @@ export default function HomeFeedScreen() {
           )}
         </AnimatePresence>
 
-        {/* Pending Status Bar */}
+        {/* Status Feedback Popup */}
+        <AnimatePresence>
+          {submissionFeedback && (
+            <motion.div
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -50, opacity: 0 }}
+              className="fixed top-24 left-4 right-4 z-50 pointer-events-none"
+            >
+              <div className={`mx-auto max-w-md p-4 rounded-2xl shadow-2xl border flex items-center gap-3 backdrop-blur-md ${submissionFeedback.type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-rose-500/90 border-rose-400 text-white'
+                }`}>
+                {submissionFeedback.type === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                )}
+                <p className="text-sm font-bold leading-tight">
+                  {submissionFeedback.message}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Pending Status Bar - Only show when pending */}
         <AnimatePresence mode="wait">
-          {pendingItem && (
+          {pendingItem && pendingItem.status === 'pending' && (
             <motion.div
               key="pending-status"
               initial={{ height: 0, opacity: 0 }}
@@ -463,55 +489,23 @@ export default function HomeFeedScreen() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className={`p-4 rounded-3xl border shadow-sm flex flex-col gap-3 ${pendingItem.status === 'rejected' ? 'bg-red-50 border-red-100' :
-                pendingItem.status === 'approved' ? 'bg-emerald-50 border-emerald-100' :
-                  'bg-white border-slate-100'
-                }`}>
+              <div className="p-4 rounded-3xl border shadow-sm flex flex-col gap-3 bg-white border-slate-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {pendingItem.status === 'pending' ? (
-                      <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
-                    ) : pendingItem.status === 'approved' ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-red-500" />
-                    )}
-                    <span className={`font-bold text-sm ${pendingItem.status === 'rejected' ? 'text-red-700' :
-                      pendingItem.status === 'approved' ? 'text-emerald-700' :
-                        'text-slate-700'
-                      }`}>
-                      {pendingItem.status === 'pending' ? 'Reviewing your reflection...' :
-                        pendingItem.status === 'approved' ? 'Successfully posted' :
-                          pendingItem.error || 'Failed to upload'}
+                    <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                    <span className="font-bold text-sm text-slate-700">
+                      Reviewing your reflection...
                     </span>
                   </div>
-                  {pendingItem.status === 'rejected' && (
-                    <button
-                      onClick={() => setPendingItem(null)}
-                      className="text-xs font-bold text-red-500 hover:text-red-600"
-                    >
-                      Dismiss
-                    </button>
-                  )}
                 </div>
 
                 <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pendingItem.progress}%` }}
-                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 shadow-sm ${pendingItem.status === 'rejected' ? 'bg-red-500' :
-                      pendingItem.status === 'approved' ? 'bg-emerald-500' :
-                        'bg-slate-900'
-                      }`}
+                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-300 shadow-sm bg-slate-900"
                   />
                 </div>
-
-                {/* Keep redundant pulse for extra visibility if rejected */}
-                {pendingItem.status === 'rejected' && pendingItem.error && (
-                  <p className="text-[10px] uppercase font-black text-red-500 animate-pulse tracking-tight">
-                    Post Violation Detected
-                  </p>
-                )}
               </div>
             </motion.div>
           )}
