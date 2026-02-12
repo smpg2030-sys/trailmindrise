@@ -205,7 +205,10 @@ export default function HomeFeedScreen() {
   useEffect(() => {
     if (!pendingItem || pendingItem.status !== 'pending') return;
 
+    let moderated = false;
     const pollInterval = setInterval(async () => {
+      if (moderated) return;
+
       try {
         const endpoint = pendingItem.type === 'video'
           ? `${API_BASE}/videos/${pendingItem.id}/status`
@@ -214,26 +217,40 @@ export default function HomeFeedScreen() {
         const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
-          const currentStatus = data.status?.toLowerCase();
+          const currentStatus = (data.status || '').toLowerCase();
 
-          if (currentStatus === 'approved') {
-            setPendingItem(null); // Clear progress bar immediately
-            setSubmissionFeedback({ type: 'success', message: 'Successfully posted' });
-            fetchData(); // Refresh feed
-            setTimeout(() => setSubmissionFeedback(null), 5000);
-          } else if (currentStatus === 'rejected') {
-            setPendingItem(null); // Clear progress bar immediately
-            setSubmissionFeedback({ type: 'error', message: 'Unable to post because this is against our community guidelines' });
+          if (currentStatus === 'approved' || currentStatus === 'rejected') {
+            moderated = true;
+            clearInterval(pollInterval);
+
+            // 1. Clear the progress bar immediately
+            setPendingItem(null);
+
+            // 2. Show the pop up
+            const isApproved = currentStatus === 'approved';
+            setSubmissionFeedback({
+              type: isApproved ? 'success' : 'error',
+              message: isApproved
+                ? 'Successfully posted'
+                : 'Unable to post because this is against our community guidelines'
+            });
+
+            // 3. If approved, refresh the feed
+            if (isApproved) {
+              setTimeout(() => fetchData(), 500); // Slight delay to ensure DB consistency
+            }
+
+            // 4. Auto-hide popup after 5 seconds
             setTimeout(() => setSubmissionFeedback(null), 5000);
           }
         }
       } catch (err) {
-        console.error("Status polling failed", err);
+        console.error("Status polling failed:", err);
       }
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [pendingItem?.id, pendingItem?.status, pendingItem?.type]);
+  }, [pendingItem?.id, pendingItem?.status]);
 
   // Steady Progress Animation
   useEffect(() => {
@@ -242,10 +259,10 @@ export default function HomeFeedScreen() {
     const progressInterval = setInterval(() => {
       setPendingItem(prev => {
         if (!prev || prev.status !== 'pending' || prev.progress >= 95) return prev;
-        // Slow steady creep
-        return { ...prev, progress: Math.min(prev.progress + 0.3, 95) };
+        // Steady creep: +0.5% every 500ms (~1% per sec)
+        return { ...prev, progress: Math.min(prev.progress + 0.5, 95) };
       });
-    }, 300); // Update frequently for smooth motion
+    }, 500);
 
     return () => clearInterval(progressInterval);
   }, [pendingItem?.id, pendingItem?.status]);
@@ -465,16 +482,16 @@ export default function HomeFeedScreen() {
               initial={{ y: -100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -100, opacity: 0 }}
-              className="fixed top-28 left-4 right-4 z-[9999] pointer-events-none"
+              className="fixed inset-x-0 top-0 z-[10000] p-4 flex justify-center pointer-events-none"
             >
-              <div className={`mx-auto max-w-md p-5 rounded-2xl shadow-2xl border-2 flex items-center gap-4 backdrop-blur-xl ${submissionFeedback.type === 'success'
-                ? 'bg-emerald-600 border-emerald-400 text-white'
-                : 'bg-rose-600 border-rose-400 text-white'
+              <div className={`w-full max-w-md p-5 rounded-2xl shadow-2xl border-2 flex items-center gap-4 backdrop-blur-xl pointer-events-auto ${submissionFeedback.type === 'success'
+                  ? 'bg-emerald-600/95 border-emerald-400 text-white'
+                  : 'bg-rose-600/95 border-rose-400 text-white'
                 }`}>
                 {submissionFeedback.type === 'success' ? (
-                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                  <CheckCircle2 className="w-6 h-6 flex-shrink-0" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <AlertCircle className="w-6 h-6 flex-shrink-0" />
                 )}
                 <p className="text-sm font-bold leading-tight">
                   {submissionFeedback.message}
@@ -489,26 +506,26 @@ export default function HomeFeedScreen() {
           {pendingItem && pendingItem.status === 'pending' && (
             <motion.div
               key="pending-status"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0, opacity: 0, scale: 0.95 }}
+              animate={{ height: 'auto', opacity: 1, scale: 1 }}
+              exit={{ height: 0, opacity: 0, scale: 0.95 }}
               className="overflow-hidden"
             >
-              <div className="p-4 rounded-3xl border shadow-sm flex flex-col gap-3 bg-white border-slate-100">
+              <div className="p-4 rounded-3xl border-2 shadow-sm flex flex-col gap-3 bg-white border-slate-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                    <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                     <span className="font-bold text-sm text-slate-700">
                       Reviewing your reflection...
                     </span>
                   </div>
                 </div>
 
-                <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pendingItem.progress}%` }}
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-300 shadow-sm bg-slate-900"
+                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-500 shadow-sm bg-slate-900"
                   />
                 </div>
               </div>
