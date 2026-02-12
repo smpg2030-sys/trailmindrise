@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { Post, Video, FriendRequest, AppNotification, CommunityStory } from "../types";
+import { Post, FriendRequest, AppNotification, CommunityStory } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoPlayer from "../components/VideoPlayer";
 import GrowthTree from "../components/GrowthTree";
 
-const TABS = ["Videos", "Stories", "All Posts", "Daily Quotes", "Gratitude"] as const;
+const TABS = ["All Posts", "Stories", "Daily Quotes", "Gratitude"] as const;
 
 const getApiBase = () => {
   const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api");
@@ -20,7 +20,7 @@ const API_BASE = getApiBase();
 export default function HomeFeedScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Videos");
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("All Posts");
   const [showNewPost, setShowNewPost] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,7 +46,6 @@ export default function HomeFeedScreen() {
   }, [user]);
 
   const [posts, setPosts] = useState<Post[]>([]);
-  const [videos, setVideos] = useState<Video[]>([]);
   const [communityStories, setCommunityStories] = useState<CommunityStory[]>([]);
   const [loading, setLoading] = useState(false);
   const [calculatedStreak, setCalculatedStreak] = useState<number>(0);
@@ -113,17 +112,7 @@ export default function HomeFeedScreen() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      if (activeTab === "Videos") {
-        const res = await fetch(`${API_BASE}/videos/`);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setVideos(data);
-          } else {
-            setVideos([]);
-          }
-        }
-      } else if (activeTab === "Stories") {
+      if (activeTab === "Stories") {
         const res = await fetch(`${API_BASE}/community-stories/`);
         if (res.ok) {
           const data = await res.json();
@@ -133,21 +122,33 @@ export default function HomeFeedScreen() {
             setCommunityStories([]);
           }
         }
-      } else {
-        const url = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setPosts(data);
-          } else {
-            setPosts([]);
-          }
+      } else if (activeTab === "All Posts") {
+        const postsUrl = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
+        const videosUrl = `${API_BASE}/videos/`;
+
+        const [postsRes, videosRes] = await Promise.all([
+          fetch(postsUrl),
+          fetch(videosUrl)
+        ]);
+
+        let combinedFeed: any[] = [];
+
+        if (postsRes.ok) {
+          const postsData = await postsRes.json();
+          if (Array.isArray(postsData)) combinedFeed = [...combinedFeed, ...postsData];
         }
+
+        if (videosRes.ok) {
+          const videosData = await videosRes.json();
+          if (Array.isArray(videosData)) combinedFeed = [...combinedFeed, ...videosData];
+        }
+
+        // Sort by created_at descending
+        combinedFeed.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setPosts(combinedFeed);
       }
     } catch (error) {
       console.error("Error fetching feed:", error);
-      setVideos([]);
       setPosts([]);
       setCommunityStories([]);
     } finally {
@@ -448,112 +449,107 @@ export default function HomeFeedScreen() {
               ))
             )}
           </div>
-        ) : activeTab === "Videos" ? (
+        ) : activeTab === "All Posts" ? (
           <div className="grid grid-cols-1 gap-6">
-            {videos.length === 0 ? (
+            {posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <VideoIcon className="w-16 h-16 text-slate-200 mb-4" />
-                <p className="text-xl font-bold text-slate-700">No videos yet</p>
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-3xl">🌿</div>
+                <p className="text-xl font-bold text-slate-700 mb-2">No posts yet</p>
+                <p className="text-slate-500 text-sm max-w-xs mx-auto">Be the first to share your mindful journey!</p>
               </div>
             ) : (
-              videos.map((video, index) => (
-                <motion.div
-                  key={video.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group"
-                >
-                  <div className="p-4 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs">
-                      {video.author_name?.[0]?.toUpperCase() || "U"}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800 text-sm">{video.author_name}</p>
-                      <p className="text-[10px] text-slate-400 font-medium">
-                        {video.created_at ? new Date(video.created_at).toLocaleDateString() : 'Just now'}
-                      </p>
-                    </div>
-                  </div>
+              posts.map((item: any, index) => {
+                const isVideoItem = !!item.video_url;
 
-                  <div className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner">
-                    <VideoPlayer
-                      src={video.video_url?.startsWith("/static") ? `${API_BASE}${video.video_url}` : (video.video_url || "")}
-                      className="h-full"
-                    />
-                  </div>
+                if (isVideoItem) {
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group"
+                    >
+                      <div className="p-4 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs uppercase">
+                          {item.author_name?.[0] || "U"}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">{item.author_name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            {new Date(item.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
 
-                  {video.caption && (
-                    <div className="p-4 pt-3">
-                      <p className="text-slate-700 text-sm leading-relaxed">
-                        <span className="font-bold mr-2 text-slate-900">{video.author_name}</span>
-                        {video.caption}
-                      </p>
+                      <div className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner">
+                        <VideoPlayer
+                          src={item.video_url?.startsWith("/static") ? `${API_BASE}${item.video_url}` : (item.video_url || "")}
+                          className="h-full"
+                        />
+                      </div>
+
+                      {item.caption && (
+                        <div className="p-4 pt-3">
+                          <p className="text-slate-700 text-sm leading-relaxed">
+                            <span className="font-bold mr-2 text-slate-900">{item.author_name}</span>
+                            {item.caption}
+                          </p>
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                }
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col group transition-all duration-300 hover:shadow-md"
+                  >
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold border border-emerald-100 overflow-hidden">
+                          {item.author_profile_pic ? (
+                            <img src={item.author_profile_pic} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            item.author_name?.[0]?.toUpperCase() || "U"
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm leading-tight">{item.author_name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            {new Date(item.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </motion.div>
-              ))
+
+                    {item.image_url && (
+                      <div className="px-4 pb-4">
+                        <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-50">
+                          <img
+                            src={item.image_url.startsWith("http") ? item.image_url : (item.image_url.startsWith("/static") ? `${API_BASE}${item.image_url}` : item.image_url)}
+                            alt="Post content"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-4 pt-0">
+                      <p className="text-slate-700 text-[15px] leading-relaxed whitespace-pre-line">{item.content}</p>
+                    </div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
-        ) : posts.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 text-center"
-          >
-            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-3xl">
-              🌿
-            </div>
-            <p className="text-xl font-bold text-slate-700 mb-2">No posts yet</p>
-            <p className="text-slate-500 text-sm max-w-xs mx-auto">
-              Be the first to share your mindful journey with the community!
-            </p>
-          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {posts.map((post, index) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col group transition-all duration-300 hover:shadow-md"
-              >
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold border border-emerald-100 overflow-hidden">
-                      {post.author_profile_pic ? (
-                        <img src={post.author_profile_pic} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        post.author_name?.[0]?.toUpperCase() || "U"
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800 text-sm leading-tight">{post.author_name}</p>
-                      <p className="text-[10px] text-slate-400 font-medium">
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {post.image_url && (
-                  <div className="px-4 pb-4">
-                    <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-50">
-                      <img
-                        src={post.image_url}
-                        alt="Post content"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="p-4 pt-0">
-                  <p className="text-slate-700 text-[15px] leading-relaxed whitespace-pre-line">{post.content}</p>
-                </div>
-              </motion.div>
-            ))}
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <p className="font-medium italic">Content for this tab coming soon...</p>
           </div>
         )}
       </div>
