@@ -42,8 +42,7 @@ export default function Sidebar() {
 
                 <button
                     onClick={() => {
-                        // We'll communicate with HomeFeedScreen if needed, but for now simple navigate
-                        navigate("/");
+                        navigate("/?create=true");
                     }}
                     className="w-full mt-6 flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-2xl font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-200"
                 >

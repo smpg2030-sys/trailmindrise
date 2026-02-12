@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Post, Video, FriendRequest, AppNotification, CommunityStory } from "../types";
@@ -23,6 +23,7 @@ export default function HomeFeedScreen() {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Videos");
   const [showNewPost, setShowNewPost] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [postContent, setPostContent] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -54,6 +55,16 @@ export default function HomeFeedScreen() {
       fetchStreakData();
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setShowNewPost(true);
+      // Remove the parameter after opening the modal
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("create");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams]);
 
   const fetchStreakData = async () => {
     if (!user?.id) return;
