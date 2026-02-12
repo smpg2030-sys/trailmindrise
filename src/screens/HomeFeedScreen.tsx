@@ -276,7 +276,7 @@ export default function HomeFeedScreen() {
         // 2. Upload directly to Cloudinary (Unsigned)
         const cloudFormData = new FormData();
         cloudFormData.append("file", selectedFile);
-        cloudFormData.append("upload_preset", "ml_default"); // Common default, can be customized
+        cloudFormData.append("upload_preset", "mind_rise_unsigned"); // Updated to match user config
         cloudFormData.append("resource_type", "video");
 
         const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloud_name || 'mindrise'}/video/upload`;
