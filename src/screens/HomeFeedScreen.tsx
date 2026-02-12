@@ -809,15 +809,25 @@ export default function HomeFeedScreen() {
                       <input
                         type="file"
                         className="hidden"
-                        accept="image/*"
+                        accept="image/*,video/*"
                         capture="environment"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
                             setSelectedFile(file);
-                            const reader = new FileReader();
-                            reader.onloadend = () => setImagePreview(reader.result as string);
-                            reader.readAsDataURL(file);
+
+                            // Check if it's a video
+                            if (file.type.startsWith('video/')) {
+                              setIsVideo(true);
+                              const previewUrl = URL.createObjectURL(file);
+                              setImagePreview(previewUrl);
+                            } else {
+                              // It's an image
+                              setIsVideo(false);
+                              const reader = new FileReader();
+                              reader.onloadend = () => setImagePreview(reader.result as string);
+                              reader.readAsDataURL(file);
+                            }
                           }
                         }}
                       />
