@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useHomeRefresh } from "../context/HomeRefreshContext";
 import { Post, FriendRequest, AppNotification, CommunityStory } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoPlayer from "../components/VideoPlayer";
@@ -41,6 +42,16 @@ export default function HomeFeedScreen() {
   const [showFullProfilePic, setShowFullProfilePic] = useState(false);
   const longPressTimer = useRef<any>(null);
   const pressStartTime = useRef<number>(0);
+
+  const { refreshTrigger } = useHomeRefresh();
+
+  // Refresh feed when trigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      fetchData();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [refreshTrigger]);
 
   useEffect(() => {
     if (user && (!user.email || !user.full_name)) {

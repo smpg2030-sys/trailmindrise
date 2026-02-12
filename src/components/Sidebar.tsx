@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Compass, MessageCircle, Zap, User, Plus, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useHomeRefresh } from "../context/HomeRefreshContext";
 
 const navItems = [
     { to: "/", label: "Home", Icon: Home },
@@ -13,6 +14,7 @@ const navItems = [
 export default function Sidebar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const { triggerRefresh } = useHomeRefresh();
 
     return (
         <aside className="w-64 h-screen sticky top-0 bg-white border-r border-slate-200 flex flex-col p-4 z-40">
@@ -28,6 +30,16 @@ export default function Sidebar() {
                         key={to}
                         to={to}
                         end={to === "/"}
+                        onClick={(e) => {
+                            if (to === "/") {
+                                // If we are already on home, trigger refresh and scroll to top
+                                if (window.location.pathname === "/") {
+                                    e.preventDefault();
+                                    triggerRefresh();
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            }
+                        }}
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${isActive
                                 ? "bg-emerald-50 text-emerald-600 shadow-sm"
