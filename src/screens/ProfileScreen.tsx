@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera, Video as VideoIcon, Upload, Users, UserPlus, CheckCircle2, Clock } from "lucide-react";
+import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera, Video as VideoIcon, Users, UserPlus, CheckCircle2, Clock } from "lucide-react";
 import { Post, Video, AppFriend, User, JournalEntry } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoPlayer from "../components/VideoPlayer";
@@ -34,7 +34,6 @@ export default function ProfileScreen() {
 
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [loadingVideos, setLoadingVideos] = useState(false);
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioDraft, setBioDraft] = useState("");
   const [isSavingBio, setIsSavingBio] = useState(false);
@@ -252,93 +251,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && currentUser) {
-      const file = e.target.files[0];
-      if (file.size > 100 * 1024 * 1024) {
-        alert("Video file is too large. Max 100MB allowed.");
-        return;
-      }
-
-      setIsUploadingVideo(true);
-      try {
-        const caption = prompt("Enter a caption for your video (optional):") || "";
-        console.log("Starting video upload process...");
-
-        // 1. Get Signature from Backend
-        console.log("Fetching upload signature from backend...");
-        const sigRes = await fetch(`${API_BASE}/upload/signature?folder=MindRise_Videos`);
-        if (!sigRes.ok) throw new Error("Could not get upload signature (Backend error)");
-        const { signature, timestamp, api_key, cloud_name, folder } = await sigRes.json();
-        console.log("Signature received:", { api_key, cloud_name, folder });
-
-        // 2. Upload directly to Cloudinary
-        console.log("Uploading direct to Cloudinary...");
-        const cloudFormData = new FormData();
-        cloudFormData.append("file", file);
-        cloudFormData.append("api_key", api_key);
-        cloudFormData.append("timestamp", timestamp.toString());
-        cloudFormData.append("signature", signature);
-        cloudFormData.append("folder", folder);
-
-        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`;
-        const cloudRes = await fetch(cloudinaryUrl, {
-          method: "POST",
-          body: cloudFormData,
-        });
-
-        if (!cloudRes.ok) {
-          const cloudErr = await cloudRes.json();
-          throw new Error(cloudErr.error?.message || "Cloudinary upload failed");
-        }
-
-        const cloudData = await cloudRes.json();
-        const videoUrl = cloudData.secure_url;
-        console.log("Cloudinary upload successful! URL:", videoUrl);
-
-        // 3. Register metadata with our backend
-        console.log("Registering video with MindRise backend...");
-        const regRes = await fetch(`${API_BASE}/upload-video/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            video_url: videoUrl,
-            user_id: currentUser.id,
-            author_name: currentUser.full_name || currentUser.email?.split("@")[0] || "MindRise User",
-            caption: caption
-          }),
-        });
-
-        if (!regRes.ok) {
-          const errData = await regRes.json();
-          throw new Error(errData.detail || "Failed to register video metadata with backend");
-        }
-
-        const regData = await regRes.json();
-        console.log("Video registration successful:", regData);
-
-        if (regData.success) {
-          const newVideo: Video = {
-            id: regData.videoId,
-            video_url: videoUrl,
-            status: "pending" as const,
-            user_id: currentUser.id,
-            author_name: currentUser.full_name || currentUser.email?.split("@")[0] || "Me",
-            created_at: new Date().toISOString()
-          };
-          setMyVideos(prev => [newVideo, ...prev]);
-          alert("Video uploaded and sent for moderation! ✅");
-        } else {
-          alert("Failed to upload video: " + (regData.message || "Unknown error"));
-        }
-      } catch (error: any) {
-        console.error("CRITICAL UPLOAD ERROR:", error);
-        alert(`Error uploading video: ${error.message || "Network error. Check your connection or Vercel logs."}`);
-      } finally {
-        setIsUploadingVideo(false);
-      }
-    }
-  };
 
   const handleDeleteVideo = async (videoId: string) => {
     if (!confirm("Are you sure you want to delete this video?")) return;
@@ -687,15 +599,6 @@ export default function ProfileScreen() {
           </motion.button>
         )}
 
-        {isOwnProfile && (
-          <div className="mb-8">
-            <label className={`w-full py-4 rounded-2xl font-bold text-slate-700 bg-white border-2 border-dashed border-slate-300 flex items-center justify-center gap-2 cursor-pointer hover:border-slate-800 hover:bg-slate-50 transition-all ${isUploadingVideo ? 'opacity-50 pointer-events-none' : ''}`}>
-              <input type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
-              <Upload className="w-5 h-5" />
-              {isUploadingVideo ? "Uploading..." : "Upload New Video"}
-            </label>
-          </div>
-        )}
 
         <div className="flex mb-6 bg-slate-100/50 p-1.5 rounded-xl">
           <button

@@ -27,6 +27,7 @@ export default function HomeFeedScreen() {
   const [postContent, setPostContent] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isVideo, setIsVideo] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -201,42 +202,92 @@ export default function HomeFeedScreen() {
     if (!postContent.trim() && !selectedFile) return;
     setIsUploading(true);
     try {
-      let imageUrl = null;
-      if (selectedFile) {
-        imageUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(selectedFile);
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = error => reject(error);
+      if (isVideo && selectedFile) {
+        // VIDEO UPLOAD FLOW
+        console.log("Starting video upload process...");
+
+        // 1. Get Signature from Backend
+        const sigRes = await fetch(`${API_BASE}/upload/signature?folder=MindRise_Videos`);
+        if (!sigRes.ok) throw new Error("Could not get upload signature");
+        const { signature, timestamp, api_key, cloud_name, folder } = await sigRes.json();
+
+        // 2. Upload directly to Cloudinary
+        const cloudFormData = new FormData();
+        cloudFormData.append("file", selectedFile);
+        cloudFormData.append("api_key", api_key);
+        cloudFormData.append("timestamp", timestamp.toString());
+        cloudFormData.append("signature", signature);
+        cloudFormData.append("folder", folder);
+
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`;
+        const cloudRes = await fetch(cloudinaryUrl, {
+          method: "POST",
+          body: cloudFormData,
         });
-      }
 
-      const queryParams = new URLSearchParams({
-        user_id: user?.id || "",
-        author_name: user?.full_name || user?.email || ""
-      }).toString();
+        if (!cloudRes.ok) {
+          const cloudErr = await cloudRes.json();
+          throw new Error(cloudErr.error?.message || "Cloudinary upload failed");
+        }
 
-      const response = await fetch(`${API_BASE}/posts/?${queryParams}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: postContent,
-          image_url: imageUrl
-        }),
-      });
+        const cloudData = await cloudRes.json();
+        const videoUrl = cloudData.secure_url;
 
-      if (response.ok) {
-        alert("Post submitted for review! ✅");
-        setPostContent("");
-        setSelectedFile(null);
-        setImagePreview(null);
-        setShowNewPost(false);
+        // 3. Register metadata with our backend
+        const regRes = await fetch(`${API_BASE}/upload-video/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            video_url: videoUrl,
+            user_id: user?.id,
+            author_name: user?.full_name || user?.email?.split("@")[0] || "MindRise User",
+            caption: postContent
+          }),
+        });
+
+        if (!regRes.ok) throw new Error("Failed to register video metadata");
+
+        alert("Video uploaded and sent for review! ✅");
       } else {
-        alert("Failed to submit post.");
+        // IMAGE/POST UPLOAD FLOW
+        let imageUrl = null;
+        if (selectedFile) {
+          imageUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(selectedFile);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+          });
+        }
+
+        const queryParams = new URLSearchParams({
+          user_id: user?.id || "",
+          author_name: user?.full_name || user?.email || ""
+        }).toString();
+
+        const response = await fetch(`${API_BASE}/posts/?${queryParams}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: postContent,
+            image_url: imageUrl
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to submit post");
+        alert("Reflection shared for review! ✅");
       }
+
+      // Reset
+      setPostContent("");
+      setSelectedFile(null);
+      setImagePreview(null);
+      setIsVideo(false);
+      setShowNewPost(false);
+      fetchData(); // Refresh feed
     } catch (error: any) {
       console.error("Error creating post", error);
-      alert(`Error submitting post. ${error.name}: ${error.message}\nAPI_BASE: ${API_BASE}`);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
     }
@@ -590,6 +641,7 @@ export default function HomeFeedScreen() {
                           const file = e.target.files?.[0];
                           if (file) {
                             setSelectedFile(file);
+                            setIsVideo(false);
                             const reader = new FileReader();
                             reader.onloadend = () => setImagePreview(reader.result as string);
                             reader.readAsDataURL(file);
@@ -597,6 +649,24 @@ export default function HomeFeedScreen() {
                         }}
                       />
                       <ImageIcon className="w-5 h-5" />
+                    </label>
+                    <label className="w-12 h-12 flex items-center justify-center rounded-2xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-all active:scale-95 cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="video/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSelectedFile(file);
+                            setIsVideo(true);
+                            setImagePreview(null);
+                            // For video, we don't have a preview yet but we can show the filename or an icon
+                            alert(`Video selected: ${file.name}`);
+                          }
+                        }}
+                      />
+                      <VideoIcon className="w-5 h-5" />
                     </label>
                   </div>
 
