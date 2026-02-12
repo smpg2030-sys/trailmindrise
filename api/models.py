@@ -52,16 +52,18 @@ class OTPVerifyRequest(BaseModel):
 class PostCreate(BaseModel):
     content: str
     image_url: str | None = None
+    video_url: str | None = None
 
 
 class PostResponse(BaseModel):
     id: str
     user_id: str
     author_name: str
-    author_email: str | None = None
-    author_profile_pic: str | None = None
     content: str
     image_url: str | None = None
+    video_url: str | None = None
+    author_email: str | None = None
+    author_profile_pic: str | None = None
     status: str  # "pending", "approved", "rejected"
     created_at: str
     rejection_reason: str | None = None

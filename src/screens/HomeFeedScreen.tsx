@@ -269,20 +269,17 @@ export default function HomeFeedScreen() {
         // VIDEO UPLOAD FLOW
         console.log("Starting video upload process...");
 
-        // 1. Get Signature from Backend
-        const sigRes = await fetch(`${API_BASE}/upload/signature?folder=MindRise_Videos`);
-        if (!sigRes.ok) throw new Error("Could not get upload signature");
-        const { signature, timestamp, api_key, cloud_name, folder } = await sigRes.json();
+        // 1. Get cloud name from backend (safest way to get the config)
+        const configRes = await fetch(`${API_BASE}/upload/signature`);
+        const { cloud_name } = await configRes.json();
 
-        // 2. Upload directly to Cloudinary
+        // 2. Upload directly to Cloudinary (Unsigned)
         const cloudFormData = new FormData();
         cloudFormData.append("file", selectedFile);
-        cloudFormData.append("api_key", api_key);
-        cloudFormData.append("timestamp", timestamp.toString());
-        cloudFormData.append("signature", signature);
-        cloudFormData.append("folder", folder);
+        cloudFormData.append("upload_preset", "ml_default"); // Common default, can be customized
+        cloudFormData.append("resource_type", "video");
 
-        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`;
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloud_name || 'mindrise'}/video/upload`;
         const cloudRes = await fetch(cloudinaryUrl, {
           method: "POST",
           body: cloudFormData,
@@ -296,26 +293,34 @@ export default function HomeFeedScreen() {
         const cloudData = await cloudRes.json();
         const videoUrl = cloudData.secure_url;
 
-        // 3. Register metadata with our backend
-        const regRes = await fetch(`${API_BASE}/upload-video/register`, {
+        // 3. Register as a post with our backend
+        const queryParams = new URLSearchParams({
+          user_id: user?.id || "",
+          author_name: user?.full_name || user?.email || "MindRise User"
+        }).toString();
+
+        const response = await fetch(`${API_BASE}/posts/?${queryParams}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            video_url: videoUrl,
-            user_id: user?.id,
-            author_name: user?.full_name || user?.email?.split("@")[0] || "MindRise User",
-            caption: postContent
+            content: postContent,
+            video_url: videoUrl
           }),
         });
 
-        if (!regRes.ok) throw new Error("Failed to register video metadata");
+        if (!response.ok) throw new Error("Failed to submit video post");
 
-        const regData = await regRes.json();
+        const postData = await response.json();
         setPendingItem({
-          id: regData.videoId || regData.id,
+          id: postData.id,
           type: 'video',
           status: 'pending',
           progress: 30
+        });
+
+        setSubmissionFeedback({
+          type: 'success',
+          message: 'Video submitted for admin review'
         });
       } else {
         // IMAGE/POST UPLOAD FLOW
@@ -362,7 +367,10 @@ export default function HomeFeedScreen() {
       fetchData(); // Refresh feed
     } catch (error: any) {
       console.error("Error creating post", error);
-      alert(`Error: ${error.message}`);
+      setSubmissionFeedback({
+        type: 'error',
+        message: error.message || 'Failed to submit post'
+      });
     } finally {
       setIsUploading(false);
     }
@@ -789,8 +797,6 @@ export default function HomeFeedScreen() {
                             setSelectedFile(file);
                             setIsVideo(true);
                             setImagePreview(null);
-                            // For video, we don't have a preview yet but we can show the filename or an icon
-                            alert(`Video selected: ${file.name}`);
                           }
                         }}
                       />

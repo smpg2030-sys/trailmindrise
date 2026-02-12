@@ -17,6 +17,7 @@ def create_post(post: PostCreate, user_id: str, author_name: str):
         "author_name": author_name,
         "content": post.content,
         "image_url": post.image_url,
+        "video_url": post.video_url,
         "status": "pending",
         "created_at": datetime.utcnow().isoformat(),
         "rejection_reason": None
