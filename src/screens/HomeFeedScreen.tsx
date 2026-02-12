@@ -40,6 +40,9 @@ export default function HomeFeedScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileBanner, setShowProfileBanner] = useState(false);
   const [showFullProfilePic, setShowFullProfilePic] = useState(false);
+  const [showCameraOptions, setShowCameraOptions] = useState(false);
+  const cameraPhotoInputRef = useRef<HTMLInputElement>(null);
+  const cameraVideoInputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<any>(null);
   const pressStartTime = useRef<number>(0);
 
@@ -805,34 +808,89 @@ export default function HomeFeedScreen() {
 
                 <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-6">
                   <div className="flex gap-2">
-                    <label className="w-12 h-12 flex items-center justify-center rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all active:scale-95 group cursor-pointer">
+                    {/* Camera Options Popover Trigger */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowCameraOptions(!showCameraOptions)}
+                        className="w-12 h-12 flex items-center justify-center rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all active:scale-95 group"
+                      >
+                        <Camera className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                      </button>
+
+                      {/* Camera Options Menu */}
+                      <AnimatePresence>
+                        {showCameraOptions && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-[150]"
+                              onClick={() => setShowCameraOptions(false)}
+                            />
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                              className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-xl border border-slate-100 p-1 w-36 z-[160] flex flex-col gap-1 overflow-hidden"
+                            >
+                              <button
+                                onClick={() => {
+                                  cameraPhotoInputRef.current?.click();
+                                  setShowCameraOptions(false);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700 font-medium w-full text-left"
+                              >
+                                <Camera className="w-4 h-4 text-violet-500" />
+                                <span>Take Photo</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  cameraVideoInputRef.current?.click();
+                                  setShowCameraOptions(false);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700 font-medium w-full text-left"
+                              >
+                                <VideoIcon className="w-4 h-4 text-rose-500" />
+                                <span>Record Video</span>
+                              </button>
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Hidden Strict Inputs */}
                       <input
+                        ref={cameraPhotoInputRef}
                         type="file"
                         className="hidden"
-                        accept="image/*,video/*"
+                        accept="image/*"
                         capture="environment"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
                             setSelectedFile(file);
-
-                            // Check if it's a video
-                            if (file.type.startsWith('video/')) {
-                              setIsVideo(true);
-                              const previewUrl = URL.createObjectURL(file);
-                              setImagePreview(previewUrl);
-                            } else {
-                              // It's an image
-                              setIsVideo(false);
-                              const reader = new FileReader();
-                              reader.onloadend = () => setImagePreview(reader.result as string);
-                              reader.readAsDataURL(file);
-                            }
+                            setIsVideo(false);
+                            const reader = new FileReader();
+                            reader.onloadend = () => setImagePreview(reader.result as string);
+                            reader.readAsDataURL(file);
                           }
                         }}
                       />
-                      <Camera className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                    </label>
+                      <input
+                        ref={cameraVideoInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="video/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSelectedFile(file);
+                            setIsVideo(true);
+                            const previewUrl = URL.createObjectURL(file);
+                            setImagePreview(previewUrl);
+                          }
+                        }}
+                      />
+                    </div>
                     <label className="w-12 h-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all active:scale-95 cursor-pointer">
                       <input
                         type="file"
