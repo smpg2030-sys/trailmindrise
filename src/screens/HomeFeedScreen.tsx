@@ -740,9 +740,20 @@ export default function HomeFeedScreen() {
                   Note: All posts are reviewed by an admin before being published to the community.
                 </p>
 
-                {imagePreview && (
-                  <div className="mt-4 relative group aspect-video rounded-2xl overflow-hidden border border-slate-200">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                {(imagePreview || (isVideo && selectedFile)) && (
+                  <div className="mt-4 relative group aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-black">
+                    {isVideo ? (
+                      <video
+                        src={imagePreview || undefined}
+                        className="w-full h-full object-contain"
+                        controls
+                        autoPlay
+                        muted
+                        loop
+                      />
+                    ) : (
+                      <img src={imagePreview || ""} alt="Preview" className="w-full h-full object-cover" />
+                    )}
                     <button
                       onClick={() => {
                         setImagePreview(null);
@@ -803,7 +814,8 @@ export default function HomeFeedScreen() {
                           if (file) {
                             setSelectedFile(file);
                             setIsVideo(true);
-                            setImagePreview(null);
+                            const previewUrl = URL.createObjectURL(file);
+                            setImagePreview(previewUrl);
                           }
                         }}
                       />
