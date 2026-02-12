@@ -321,7 +321,7 @@ export default function HomeFeedScreen() {
           id: regData.videoId || regData.id,
           type: 'video',
           status: 'pending',
-          progress: 10
+          progress: 30
         });
       } else {
         // IMAGE/POST UPLOAD FLOW
@@ -355,7 +355,7 @@ export default function HomeFeedScreen() {
           id: postData.id,
           type: 'post',
           status: 'pending',
-          progress: 10
+          progress: 30
         });
       }
 
@@ -381,6 +381,33 @@ export default function HomeFeedScreen() {
       exit={{ opacity: 0 }}
       className="w-full"
     >
+      {/* Status Feedback Popup - Root level for maximum visibility */}
+      <AnimatePresence>
+        {submissionFeedback && (
+          <motion.div
+            key="submission-feedback-popup"
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            className="fixed inset-x-0 top-0 z-[99999] p-4 flex justify-center pointer-events-none"
+          >
+            <div className={`w-full max-w-md p-5 rounded-2xl shadow-2xl border-2 flex items-center gap-4 backdrop-blur-2xl pointer-events-auto ${submissionFeedback.type === 'success'
+                ? 'bg-emerald-600/95 border-emerald-400 text-white'
+                : 'bg-rose-600/95 border-rose-400 text-white'
+              }`}>
+              {submissionFeedback.type === 'success' ? (
+                <CheckCircle2 className="w-6 h-6 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="w-6 h-6 flex-shrink-0" />
+              )}
+              <p className="text-sm font-bold leading-tight">
+                {submissionFeedback.message}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl px-4 py-4 flex items-center justify-between border-b border-slate-100/50 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative group">
@@ -470,33 +497,6 @@ export default function HomeFeedScreen() {
               >
                 Complete
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Status Feedback Popup */}
-        <AnimatePresence>
-          {submissionFeedback && (
-            <motion.div
-              key="submission-feedback-popup"
-              initial={{ y: -100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -100, opacity: 0 }}
-              className="fixed inset-x-0 top-0 z-[10000] p-4 flex justify-center pointer-events-none"
-            >
-              <div className={`w-full max-w-md p-5 rounded-2xl shadow-2xl border-2 flex items-center gap-4 backdrop-blur-xl pointer-events-auto ${submissionFeedback.type === 'success'
-                  ? 'bg-emerald-600/95 border-emerald-400 text-white'
-                  : 'bg-rose-600/95 border-rose-400 text-white'
-                }`}>
-                {submissionFeedback.type === 'success' ? (
-                  <CheckCircle2 className="w-6 h-6 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="w-6 h-6 flex-shrink-0" />
-                )}
-                <p className="text-sm font-bold leading-tight">
-                  {submissionFeedback.message}
-                </p>
-              </div>
             </motion.div>
           )}
         </AnimatePresence>
