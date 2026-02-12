@@ -217,13 +217,10 @@ export default function HomeFeedScreen() {
             setPendingItem(prev => prev ? { ...prev, status: 'approved', progress: 100 } : null);
             fetchData(); // Refresh feed to show the new post
             // Auto-clear after 3 seconds
-            setTimeout(() => setPendingItem(null), 3000);
+            setTimeout(() => setPendingItem(null), 3500);
           } else if (data.status === 'rejected') {
-            setPendingItem(prev => prev ? { ...prev, status: 'rejected', progress: 100, error: "This post is against our community guidelines" } : null);
+            setPendingItem(prev => prev ? { ...prev, status: 'rejected', progress: 100, error: "Failed to upload the post because it is against our community guidelines" } : null);
             // Don't auto-clear, let the user see the error
-          } else {
-            // Still pending, increment progress slightly for visual feedback if < 90
-            setPendingItem(prev => prev ? { ...prev, progress: Math.min(prev.progress + 2, 90) } : null);
           }
         }
       } catch (err) {
@@ -233,6 +230,21 @@ export default function HomeFeedScreen() {
 
     return () => clearInterval(pollInterval);
   }, [pendingItem]);
+
+  // Steady Progress Animation
+  useEffect(() => {
+    if (!pendingItem || pendingItem.status !== 'pending') return;
+
+    const progressInterval = setInterval(() => {
+      setPendingItem(prev => {
+        if (!prev || prev.status !== 'pending' || prev.progress >= 95) return prev;
+        // Slow steady creep
+        return { ...prev, progress: Math.min(prev.progress + 0.3, 95) };
+      });
+    }, 300); // Update frequently for smooth motion
+
+    return () => clearInterval(progressInterval);
+  }, [pendingItem?.id, pendingItem?.status]);
 
   const handlePostSubmit = async () => {
     if (!postContent.trim() && !selectedFile) return;
@@ -452,8 +464,8 @@ export default function HomeFeedScreen() {
               className="overflow-hidden"
             >
               <div className={`p-4 rounded-3xl border shadow-sm flex flex-col gap-3 ${pendingItem.status === 'rejected' ? 'bg-red-50 border-red-100' :
-                  pendingItem.status === 'approved' ? 'bg-emerald-50 border-emerald-100' :
-                    'bg-white border-slate-100'
+                pendingItem.status === 'approved' ? 'bg-emerald-50 border-emerald-100' :
+                  'bg-white border-slate-100'
                 }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -465,12 +477,12 @@ export default function HomeFeedScreen() {
                       <AlertCircle className="w-5 h-5 text-red-500" />
                     )}
                     <span className={`font-bold text-sm ${pendingItem.status === 'rejected' ? 'text-red-700' :
-                        pendingItem.status === 'approved' ? 'text-emerald-700' :
-                          'text-slate-700'
+                      pendingItem.status === 'approved' ? 'text-emerald-700' :
+                        'text-slate-700'
                       }`}>
                       {pendingItem.status === 'pending' ? 'Reviewing your reflection...' :
-                        pendingItem.status === 'approved' ? 'Reflection Approved!' :
-                          'Reflection Rejected'}
+                        pendingItem.status === 'approved' ? 'Successfully posted' :
+                          'Failed to upload'}
                     </span>
                   </div>
                   {pendingItem.status === 'rejected' && (
@@ -488,8 +500,8 @@ export default function HomeFeedScreen() {
                     initial={{ width: 0 }}
                     animate={{ width: `${pendingItem.progress}%` }}
                     className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 shadow-sm ${pendingItem.status === 'rejected' ? 'bg-red-500' :
-                        pendingItem.status === 'approved' ? 'bg-emerald-500' :
-                          'bg-slate-900'
+                      pendingItem.status === 'approved' ? 'bg-emerald-500' :
+                        'bg-slate-900'
                       }`}
                   />
                 </div>
