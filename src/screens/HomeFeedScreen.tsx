@@ -206,7 +206,6 @@ export default function HomeFeedScreen() {
     if (!pendingItem || pendingItem.status !== 'pending') return;
 
     const itemId = pendingItem.id;
-    const itemType = pendingItem.type;
     let pollCounter = 0;
 
     const mainInterval = setInterval(async () => {
@@ -222,9 +221,8 @@ export default function HomeFeedScreen() {
       if (pollCounter >= 6) {
         pollCounter = 0;
         try {
-          const endpoint = itemType === 'video'
-            ? `${API_BASE}/videos/${itemId}/status`
-            : `${API_BASE}/posts/${itemId}/status`;
+          // Both videos and posts are now registered in the posts collections
+          const endpoint = `${API_BASE}/posts/${itemId}/status`;
 
           const res = await fetch(endpoint);
           if (res.ok) {
@@ -241,7 +239,9 @@ export default function HomeFeedScreen() {
                 type: isApproved ? 'success' : 'error',
                 message: isApproved
                   ? 'Successfully posted'
-                  : 'Unable to post because this is against our community guidelines'
+                  : (data.rejection_reason
+                    ? `Rejected by admin: ${data.rejection_reason}`
+                    : 'Unable to post because this is against our community guidelines')
               });
 
               if (isApproved) {
