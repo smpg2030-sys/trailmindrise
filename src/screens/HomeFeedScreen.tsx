@@ -201,70 +201,64 @@ export default function HomeFeedScreen() {
     }
   }, [user]);
 
-  // Status Polling for Pending Post/Video
+  // Unified Polling & Progress Animation
   useEffect(() => {
     if (!pendingItem || pendingItem.status !== 'pending') return;
 
-    let moderated = false;
-    const pollInterval = setInterval(async () => {
-      if (moderated) return;
+    const itemId = pendingItem.id;
+    const itemType = pendingItem.type;
+    let pollCounter = 0;
 
-      try {
-        const endpoint = pendingItem.type === 'video'
-          ? `${API_BASE}/videos/${pendingItem.id}/status`
-          : `${API_BASE}/posts/${pendingItem.id}/status`;
-
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const data = await res.json();
-          const currentStatus = (data.status || '').toLowerCase();
-
-          if (currentStatus === 'approved' || currentStatus === 'rejected') {
-            moderated = true;
-            clearInterval(pollInterval);
-
-            // 1. Clear the progress bar immediately
-            setPendingItem(null);
-
-            // 2. Show the pop up
-            const isApproved = currentStatus === 'approved';
-            setSubmissionFeedback({
-              type: isApproved ? 'success' : 'error',
-              message: isApproved
-                ? 'Successfully posted'
-                : 'Unable to post because this is against our community guidelines'
-            });
-
-            // 3. If approved, refresh the feed
-            if (isApproved) {
-              setTimeout(() => fetchData(), 500); // Slight delay to ensure DB consistency
-            }
-
-            // 4. Auto-hide popup after 5 seconds
-            setTimeout(() => setSubmissionFeedback(null), 5000);
-          }
-        }
-      } catch (err) {
-        console.error("Status polling failed:", err);
-      }
-    }, 3000);
-
-    return () => clearInterval(pollInterval);
-  }, [pendingItem?.id, pendingItem?.status]);
-
-  // Steady Progress Animation
-  useEffect(() => {
-    if (!pendingItem || pendingItem.status !== 'pending') return;
-
-    const progressInterval = setInterval(() => {
+    const mainInterval = setInterval(async () => {
+      // 1. Steady Creep Progress (every 500ms)
       setPendingItem(prev => {
-        if (!prev || prev.status !== 'pending' || prev.progress >= 95) return prev;
-        // Steady creep: +0.5% every 500ms (~1% per sec)
+        if (!prev || prev.id !== itemId || prev.status !== 'pending') return prev;
+        if (prev.progress >= 95) return prev;
         return { ...prev, progress: Math.min(prev.progress + 0.5, 95) };
       });
+
+      // 2. Status Polling (every 3 seconds = every 6 ticks of 500ms)
+      pollCounter++;
+      if (pollCounter >= 6) {
+        pollCounter = 0;
+        try {
+          const endpoint = itemType === 'video'
+            ? `${API_BASE}/videos/${itemId}/status`
+            : `${API_BASE}/posts/${itemId}/status`;
+
+          const res = await fetch(endpoint);
+          if (res.ok) {
+            const data = await res.json();
+            const currentStatus = (data.status || '').toLowerCase();
+
+            if (currentStatus === 'approved' || currentStatus === 'rejected') {
+              // STOP EVERYTHING ATOMICALLY
+              clearInterval(mainInterval);
+              setPendingItem(null);
+
+              const isApproved = currentStatus === 'approved';
+              setSubmissionFeedback({
+                type: isApproved ? 'success' : 'error',
+                message: isApproved
+                  ? 'Successfully posted'
+                  : 'Unable to post because this is against our community guidelines'
+              });
+
+              if (isApproved) {
+                setTimeout(() => fetchData(), 500);
+              }
+
+              // Auto-hide popup after 5 seconds
+              setTimeout(() => setSubmissionFeedback(null), 5000);
+            }
+          }
+        } catch (err) {
+          console.error("Moderation polling failed:", err);
+        }
+      }
     }, 500);
 
-    return () => clearInterval(progressInterval);
+    return () => clearInterval(mainInterval);
   }, [pendingItem?.id, pendingItem?.status]);
 
   const handlePostSubmit = async () => {
@@ -392,8 +386,8 @@ export default function HomeFeedScreen() {
             className="fixed inset-x-0 top-0 z-[99999] p-4 flex justify-center pointer-events-none"
           >
             <div className={`w-full max-w-md p-5 rounded-2xl shadow-2xl border-2 flex items-center gap-4 backdrop-blur-2xl pointer-events-auto ${submissionFeedback.type === 'success'
-                ? 'bg-emerald-600/95 border-emerald-400 text-white'
-                : 'bg-rose-600/95 border-rose-400 text-white'
+              ? 'bg-emerald-600/95 border-emerald-400 text-white'
+              : 'bg-rose-600/95 border-rose-400 text-white'
               }`}>
               {submissionFeedback.type === 'success' ? (
                 <CheckCircle2 className="w-6 h-6 flex-shrink-0" />
