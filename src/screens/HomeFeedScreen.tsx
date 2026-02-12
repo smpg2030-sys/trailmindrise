@@ -419,7 +419,7 @@ export default function HomeFeedScreen() {
                   if (user?.profile_pic) {
                     setShowFullProfilePic(true);
                   }
-                }, 3000);
+                }, 1000);
               }}
               onPointerUp={() => {
                 const pressDuration = Date.now() - pressStartTime.current;
@@ -428,8 +428,8 @@ export default function HomeFeedScreen() {
                   longPressTimer.current = null;
                 }
 
-                // If held for less than 3 seconds, it's a normal tap
-                if (pressDuration < 3000 && !showFullProfilePic) {
+                // If held for less than 1 second, it's a normal tap
+                if (pressDuration < 1000 && !showFullProfilePic) {
                   navigate("/profile");
                 }
               }}
