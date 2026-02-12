@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Plus, Bell, Image as ImageIcon, Video as VideoIcon, Camera, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -38,6 +38,9 @@ export default function HomeFeedScreen() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileBanner, setShowProfileBanner] = useState(false);
+  const [showFullProfilePic, setShowFullProfilePic] = useState(false);
+  const longPressTimer = useRef<any>(null);
+  const pressStartTime = useRef<number>(0);
 
   useEffect(() => {
     if (user && (!user.email || !user.full_name)) {
@@ -408,9 +411,37 @@ export default function HomeFeedScreen() {
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl px-4 py-4 flex items-center justify-between border-b border-slate-100/50 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative group">
-            <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold bg-gradient-to-br from-emerald-400 to-emerald-600 overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform duration-300">
+            <div
+              className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold bg-gradient-to-br from-emerald-400 to-emerald-600 overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform duration-300 cursor-pointer select-none active:scale-95 touch-none"
+              onPointerDown={() => {
+                pressStartTime.current = Date.now();
+                longPressTimer.current = setTimeout(() => {
+                  if (user?.profile_pic) {
+                    setShowFullProfilePic(true);
+                  }
+                }, 3000);
+              }}
+              onPointerUp={() => {
+                const pressDuration = Date.now() - pressStartTime.current;
+                if (longPressTimer.current) {
+                  clearTimeout(longPressTimer.current);
+                  longPressTimer.current = null;
+                }
+
+                // If held for less than 3 seconds, it's a normal tap
+                if (pressDuration < 3000 && !showFullProfilePic) {
+                  navigate("/profile");
+                }
+              }}
+              onPointerLeave={() => {
+                if (longPressTimer.current) {
+                  clearTimeout(longPressTimer.current);
+                  longPressTimer.current = null;
+                }
+              }}
+            >
               {user?.profile_pic ? (
-                <img src={user.profile_pic} alt="" className="w-full h-full object-cover" />
+                <img src={user.profile_pic} alt="" className="w-full h-full object-cover pointer-events-none" />
               ) : (
                 user?.full_name?.[0] || user?.email?.[0]?.toUpperCase() || "M"
               )}
@@ -976,6 +1007,35 @@ export default function HomeFeedScreen() {
                 ))
               )}
             </div>
+          </motion.div>
+        )}
+        {showFullProfilePic && user?.profile_pic && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4"
+            onClick={() => setShowFullProfilePic(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-2xl w-full aspect-square rounded-3xl overflow-hidden shadow-2xl border border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={user.profile_pic}
+                alt="Full Profile"
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={() => setShowFullProfilePic(false)}
+                className="absolute top-4 right-4 w-12 h-12 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md hover:bg-black/70 transition-colors"
+              >
+                ×
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
