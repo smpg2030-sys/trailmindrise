@@ -43,16 +43,16 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
                     profanity = data.get('profanity', {}).get('matches', [])
                     if profanity:
                         return {
-                            "score": 0.9,
+                            "score": 0.95,
                             "status": "rejected",
                             "category": "profanity",
-                            "details": [f"Detected words: {', '.join([p['type'] for p in profanity])}"]
+                            "details": [f"Harmful language detected: {', '.join([p['type'] for p in profanity])}"]
                         }
 
-        # 2. Image Moderation
+        # 2. Image Moderation (Aggressive Detection)
         if image_url:
             image_params = {
-                'models': 'nudity-2.0,wad,scam,suggestive',
+                'models': 'nudity-2.0,wad,scam,suggestive,gore',
                 'url': image_url,
                 'api_user': SIGHTENGINE_API_USER,
                 'api_secret': SIGHTENGINE_API_SECRET
@@ -61,35 +61,35 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
             if res.status_code == 200:
                 data = res.json()
                 if data.get('status') == 'success':
+                    # Nudity 2.0 Check (Very aggressive)
                     nudity = data.get('nudity', {})
-                    if nudity.get('sexual_activity', 0) > 0.5 or nudity.get('sexual_display', 0) > 0.5:
-                        return {"score": 1.0, "status": "rejected", "category": "nudity", "details": ["Sexual content detected"]}
+                    # If high confidence raw or partial nudity -> Instant REJECT
+                    if (nudity.get('erotica', 0) > 0.2 or 
+                        nudity.get('sexual_display', 0) > 0.2 or 
+                        nudity.get('sexting', 0) > 0.2 or
+                        nudity.get('raw', 0) > 0.1): # Extremely strict on raw
+                        return {"score": 1.0, "status": "rejected", "category": "nudity", "details": ["System detected prohibited visual content."]}
                     
-                    scam = data.get('scam', {}).get('prob', 0)
-                    if scam > 0.7:
-                        return {"score": 0.9, "status": "rejected", "category": "scam", "details": ["Scam pattern detected"]}
+                    # Weapons, Alcohol, Drugs, Gore
+                    wad = data.get('weapon', 0) + data.get('alcohol', 0) + data.get('drugs', 0)
+                    if wad > 0.5 or data.get('gore', {}).get('prob', 0) > 0.3:
+                        return {"score": 1.0, "status": "rejected", "category": "harmful_visuals", "details": ["Content violates community safety guidelines."]}
 
-        # 3. Video Moderation (New!)
+                    scam = data.get('scam', {}).get('prob', 0)
+                    if scam > 0.6:
+                        return {"score": 0.9, "status": "rejected", "category": "scam", "details": ["Scam pattern detected."]}
+
+        # 3. Video Moderation (Trigger)
         if video_url:
-            # For videos, we use the video/check-sync or video/check (async is preferred for large videos)
-            # But Sightengine's video check URL works well for cloud-hosted files.
-            # Note: Video moderation is typically slower/asynchronous but we can trigger it.
             video_params = {
                 'stream_url': video_url,
                 'api_user': SIGHTENGINE_API_USER,
                 'api_secret': SIGHTENGINE_API_SECRET
             }
-            # This triggers a check. For simple integration, if it fails or needs callback, 
-            # we let Gemini/Admin handle the final verdict.
             res = requests.get('https://api.sightengine.com/1.0/video/check.json', params=video_params, timeout=10)
-            if res.status_code == 200:
-                 # If we get an instant result (for very short videos/cache), processing it
-                 # Usually it returns a request_id.
-                 data = res.json()
-                 if data.get('status') == 'success':
-                     print(f"Sightengine Video check triggered: {data.get('request_id')}")
+            # Video async check usually needs a callback, but we trigger the scan here.
 
-        return None # Inconclusive or handled, move to Gemini/Admin fallback
+        return None # Inconclusive, move to Gemini for contextual reasoning
     except Exception as e:
         print(f"Sightengine Error: {e}")
         return None
@@ -118,60 +118,63 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
             "language": "en"
         }
 
-    # 3. Sightengine Pass (Specialized Media/Text)
+    # 3. Sightengine Pass (Professional Image/Text filter)
     sight_result = check_with_sightengine(text, image_url, video_url)
     if sight_result:
         return sight_result
 
-    # 4. Gemini Pass (Deep Context Fallback)
+    # 4. Gemini Pass (Contextual Decision Maker)
     if not GEMINI_API_KEY:
         return {
             "score": 0.5,
             "status": "flagged",
             "category": "system_error",
-            "details": ["AI Keys missing: Defaulting to manual review"],
+            "details": ["AI Keys missing on server: Manual review required."],
             "language": "en"
         }
 
     try:
+        # Strict Prompt to force the AI to DECIDE
         prompt = f"""
-        Analyze the following content for a community-driven mindfulness app (Mindrise).
+        Role: Strict AI Moderator for 'Bodham' (Mindfulness App).
+        Goal: Autonomously Approve or Reject content based on guidelines.
+        
+        Guidelines:
+        - APPROVE: Genuine mindfulness, peace, meditation, gratitude, and motivational content.
+        - REJECT: Any form of nudity (even artistic), violence, hate speech, scams, spam, or toxic behavior.
+        - DECIDE: Do not use "flagged" unless the content is genuinely ambiguous. 
+        - If it is clearly NOT mindfulness or is even slightly NSFW, REJECT IT.
+        
         Content Text: "{text}"
-        {'Image/Video URL: ' + (image_url or video_url) if (image_url or video_url) else ''}
+        {'Media URL: ' + (image_url or video_url) if (image_url or video_url) else ''}
         
-        Provide a safety assessment in JSON format with:
-        - status: "approved" (safe), "rejected" (unsafe/harmful), or "flagged" (ambiguous)
-        - score: 0.0 (Safe) to 1.0 (Unsafe)
-        - category: one word (e.g., hate, violence, sexual, spam, safe, controversial)
-        - reason: brief explanation
-        
-        Rules:
-        - Approve motivational, peaceful, and community-friendly content.
-        - Reject nudity, extreme violence, hate speech, or obvious scams.
-        - Flag if you are uncertain but it seems slightly controversial.
+        Respond ONLY in JSON:
+        {{
+          "status": "approved" | "rejected" | "flagged",
+          "score": 0.1 to 1.0,
+          "category": "safe" | "nudity" | "violence" | "spam" | "toxic",
+          "reason": "Clear explanation of your choice"
+        }}
         """
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
-        max_retries = 3
+        max_retries = 2
         last_error = None
         
         for attempt in range(max_retries):
             try:
-                response = requests.post(url, json=payload, timeout=15)
+                response = requests.post(url, json=payload, timeout=12)
                 if response.status_code == 429:
-                    wait_time = 2 * (attempt + 1)
-                    time.sleep(wait_time)
+                    time.sleep(2)
                     continue
                 
                 response.raise_for_status()
                 data = response.json()
                 
                 if 'candidates' not in data or not data['candidates']:
-                    if 'promptFeedback' in data:
-                        return {"score": 1.0, "status": "rejected", "category": "safety_block", "details": ["Blocked by Safety Filters"]}
-                    raise Exception("No analysis candidates returned")
+                    return {"score": 1.0, "status": "rejected", "category": "safety_block", "details": ["Blocked by Safety Filters."]}
 
                 raw_text = data['candidates'][0]['content']['parts'][0]['text']
                 raw_text = raw_text.strip()
@@ -179,18 +182,24 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
                 elif "```" in raw_text: raw_text = raw_text.split("```")[1].split("```")[0].strip()
                     
                 result = json.loads(raw_text)
+                
+                # Enforce Decision
+                status = result.get("status", "flagged")
+                if status == "flagged" and result.get("score", 0.1) > 0.4:
+                    status = "rejected" # Auto-tighten decision
+                
                 return {
-                    "score": float(result.get("score", 0.1)),
-                    "status": result.get("status", "approved"),
+                    "score": float(result.get("score", 0.5)),
+                    "status": status,
                     "category": result.get("category", "unclassified"),
-                    "details": [result.get("reason", "AI Context Assessed")],
+                    "details": [result.get("reason", "Autonomous Decision Made")],
                     "language": "en"
                 }
             except Exception as e:
                 last_error = str(e)
                 time.sleep(1)
 
-        return {"score": 0.5, "status": "flagged", "category": "api_error", "details": [f"Moderation failed: {str(last_error)}"]}
+        return {"score": 0.5, "status": "flagged", "category": "api_error", "details": ["AI is temporarily busy. Manual review pending."]}
 
     except Exception as e:
-        return {"score": 0.5, "status": "flagged", "category": "system_error", "details": [f"System Error: {str(e)}"]}
+        return {"score": 0.5, "status": "flagged", "category": "system_error", "details": [f"System error: {str(e)}"]}
