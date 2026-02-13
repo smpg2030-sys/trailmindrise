@@ -1,0 +1,10 @@
+venv/
+node_modules/
+api/venv/
+uploads/
+api/uploads/
+.git/
+.env
+*.log
+dist/
+build/
