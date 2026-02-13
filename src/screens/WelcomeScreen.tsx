@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import LotusLogo from "../components/LotusLogo";
 
 export default function WelcomeScreen() {
   const navigate = useNavigate();
@@ -24,8 +25,8 @@ export default function WelcomeScreen() {
         <div className="absolute inset-0 bg-emerald-300 rounded-full blur-xl opacity-20 animate-pulse"></div>
         <div className="bg-white rounded-full w-48 h-48 flex items-center justify-center shadow-premium relative z-10 glass-card border-none">
           <div className="text-emerald-500">
-            <div className="text-6xl animate-float">
-              🪷
+            <div className="animate-float">
+              <LotusLogo className="w-32 h-32" />
             </div>
           </div>
         </div>
