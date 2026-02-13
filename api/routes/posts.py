@@ -60,25 +60,45 @@ def create_post(post: PostCreate, user_id: str, author_name: str, background_tas
     if db is None:
         raise HTTPException(status_code=503, detail="Database connection not established")
     
+    # 1. Run First Pass (Heuristics)
+    # This might return an instant Approval/Rejection if it hits heuristics
+    mod_result = check_content(post.content, post.image_url, post.video_url)
+    
     doc = {
         "user_id": user_id,
         "author_name": author_name,
         "content": post.content,
         "image_url": post.image_url,
         "video_url": post.video_url,
-        "status": "pending", 
-        "moderation_status": "pending",
-        "moderation_logs": [],
         "created_at": datetime.utcnow().isoformat(),
-        "rejection_reason": None
+        "moderation_score": mod_result["score"],
+        "moderation_status": mod_result["status"],
+        "moderation_category": mod_result["category"],
+        "moderation_source": "AI",
+        "moderation_logs": [{
+            "action": f"Heuristic/AI Start: {mod_result['status']}",
+            "timestamp": datetime.utcnow().isoformat(),
+            "operator": "AI_SYSTEM",
+            "details": mod_result["details"]
+        }],
+        "rejection_reason": mod_result["details"][0] if mod_result["status"] == "rejected" else None
     }
+
+    if mod_result["status"] == "approved":
+        # Instant Approval
+        doc["status"] = "approved"
+        result = db.posts.insert_one(doc)
+    else:
+        # Instant/Pending Rejection or Flagged
+        doc["status"] = mod_result["status"]
+        result = db.pending_posts.insert_one(doc)
+        
+        # If it was returned as 'pending' or 'flagged' (meaning a real API call or rate limit happened),
+        # or if we want to ensure any 'flagged' status gets an AI re-pass in background:
+        if mod_result["status"] in ["flagged", "pending"] and mod_result["category"] != "safe":
+             background_tasks.add_task(process_post_moderation, str(result.inserted_id))
     
-    result = db.pending_posts.insert_one(doc)
     doc["id"] = str(result.inserted_id)
-    
-    # Trigger Async Moderation
-    background_tasks.add_task(process_post_moderation, doc["id"])
-    
     return doc
 
 @router.get("/", response_model=list[PostResponse])

@@ -1,14 +1,51 @@
 import requests
 import json
+import re
 from config import GEMINI_API_KEY
 from datetime import datetime
 
+def is_obviously_safe(text: str) -> bool:
+    """Check for extremely safe/motivational keywords."""
+    safe_patterns = [
+        r"(?i)\b(peace|mindful|meditation|breathe|calm|gratitude|love|joy|happiness)\b",
+        r"(?i)\b(good morning|have a great day|stay positive|keep going)\b"
+    ]
+    return any(re.search(p, text) for p in safe_patterns) and len(text.split()) < 50
+
+def is_obviously_harmful(text: str) -> bool:
+    """Check for obvious profanity or spam patterns."""
+    harmful_patterns = [
+        r"(?i)\b(fuck|shit|bitch|asshole|faggot|nigger|kill yourself)\b", # Basic profanity
+        r"(?i)\b(earn \d+\$|make money fast|click here|buy now|bitcoin|crypto scam)\b" # Spam
+    ]
+    return any(re.search(p, text) for p in harmful_patterns)
+
 def check_content(text: str, image_url: str | None = None, video_url: str | None = None) -> dict:
     """
-    Analyzes content using Gemini AI via REST API (Lighter than SDK).
+    Analyzes content using Hybrid logic: Fast Heuristics + Gemini REST API.
     Returns autonomous status (approved, rejected, flagged).
     """
-    
+    # 1. Fast Heuristic: Obvious Harm (Instant Reject)
+    if is_obviously_harmful(text):
+        return {
+            "score": 1.0,
+            "status": "rejected",
+            "category": "spam_profanity",
+            "details": ["Heuristic filter detected harmful content."],
+            "language": "en"
+        }
+
+    # 2. Fast Heuristic: Obvious Safety (Instant Approve for short text)
+    if is_obviously_safe(text) and not image_url and not video_url:
+        return {
+            "score": 0.0,
+            "status": "approved",
+            "category": "safe",
+            "details": ["Heuristic filter detected safe motivational content."],
+            "language": "en"
+        }
+
+    # 3. AI Pass if heuristics are inconclusive or if there's media
     if not GEMINI_API_KEY:
         # Fallback to safe flagging if API key is missing
         return {
