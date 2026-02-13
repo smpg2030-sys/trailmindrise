@@ -92,13 +92,18 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
         return None # Inconclusive, move to Gemini for contextual reasoning
     except Exception as e:
         print(f"Sightengine Error: {e}")
-        return None
+        return {
+            "score": 0.5,
+            "status": "flagged",
+            "category": "api_error",
+            "details": [f"Sightengine Failed: {str(e)}"]
+        }
 
 def check_content(text: str, image_url: str | None = None, video_url: str | None = None) -> dict:
     """
     Analyzes content using Hybrid logic: Heuristics -> Sightengine -> Gemini.
     """
-    # 1. Fast Heuristic: Obvious Harm (Instant Reject)
+    # 1. Fast Heuristic: Obvious Harm
     if is_obviously_harmful(text):
         return {
             "score": 1.0,
@@ -120,7 +125,7 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
 
     # 3. Sightengine Pass (Professional Image/Text filter)
     sight_result = check_with_sightengine(text, image_url, video_url)
-    if sight_result:
+    if sight_result and sight_result.get("status") == "rejected":
         return sight_result
 
     # 4. Gemini Pass (Contextual Decision Maker)
@@ -128,40 +133,28 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
         return {
             "score": 0.5,
             "status": "flagged",
-            "category": "system_error",
-            "details": ["AI Keys missing on server: Manual review required."],
+            "category": "key_missing",
+            "details": ["Gemini API Key missing on Vercel. Please add it to Env Vars."],
             "language": "en"
         }
 
     try:
-        # Strict Prompt to force the AI to DECIDE
+        # Strict Prompt
         prompt = f"""
         Role: Strict AI Moderator for 'Bodham' (Mindfulness App).
-        Goal: Autonomously Approve or Reject content based on guidelines.
-        
-        Guidelines:
-        - APPROVE: Genuine mindfulness, peace, meditation, gratitude, and motivational content.
-        - REJECT: Any form of nudity (even artistic), violence, hate speech, scams, spam, or toxic behavior.
-        - DECIDE: Do not use "flagged" unless the content is genuinely ambiguous. 
-        - If it is clearly NOT mindfulness or is even slightly NSFW, REJECT IT.
-        
+        Goal: Autonomously Approve or Reject content.
+        Guidelines: REJECT nudity, violence, hate, scams. APPROVE mindfulness, peace, positivity.
+        If NSFW, REJECT IT.
         Content Text: "{text}"
         {'Media URL: ' + (image_url or video_url) if (image_url or video_url) else ''}
-        
-        Respond ONLY in JSON:
-        {{
-          "status": "approved" | "rejected" | "flagged",
-          "score": 0.1 to 1.0,
-          "category": "safe" | "nudity" | "violence" | "spam" | "toxic",
-          "reason": "Clear explanation of your choice"
-        }}
+        Respond ONLY in JSON: {{"status": "approved" | "rejected", "score": 0.1-1.0, "category": "...", "reason": "..."}}
         """
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
         max_retries = 2
-        last_error = None
+        last_error = "Unknown Error"
         
         for attempt in range(max_retries):
             try:
@@ -170,10 +163,12 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
                     time.sleep(2)
                     continue
                 
-                response.raise_for_status()
+                if response.status_code != 200:
+                    last_error = f"HTTP {response.status_code}: {response.text}"
+                    response.raise_for_status()
+
                 data = response.json()
-                
-                if 'candidates' not in data or not data['candidates']:
+                if 'candidates' not in data:
                     return {"score": 1.0, "status": "rejected", "category": "safety_block", "details": ["Blocked by Safety Filters."]}
 
                 raw_text = data['candidates'][0]['content']['parts'][0]['text']
@@ -182,15 +177,9 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
                 elif "```" in raw_text: raw_text = raw_text.split("```")[1].split("```")[0].strip()
                     
                 result = json.loads(raw_text)
-                
-                # Enforce Decision
-                status = result.get("status", "flagged")
-                if status == "flagged" and result.get("score", 0.1) > 0.4:
-                    status = "rejected" # Auto-tighten decision
-                
                 return {
                     "score": float(result.get("score", 0.5)),
-                    "status": status,
+                    "status": result.get("status", "approved"),
                     "category": result.get("category", "unclassified"),
                     "details": [result.get("reason", "Autonomous Decision Made")],
                     "language": "en"
@@ -199,7 +188,7 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
                 last_error = str(e)
                 time.sleep(1)
 
-        return {"score": 0.5, "status": "flagged", "category": "api_error", "details": ["AI is temporarily busy. Manual review pending."]}
+        return {"score": 0.5, "status": "flagged", "category": "ai_fail", "details": [f"AI Error: {last_error}"]}
 
     except Exception as e:
-        return {"score": 0.5, "status": "flagged", "category": "system_error", "details": [f"System error: {str(e)}"]}
+        return {"score": 0.5, "status": "flagged", "category": "system_error", "details": [f"System Error: {str(e)}"]}
