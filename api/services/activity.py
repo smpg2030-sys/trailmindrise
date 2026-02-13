@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from database import get_db
 from bson import ObjectId
 
@@ -22,7 +22,7 @@ def update_last_active(user_id: str):
             
             if last_streak_date != today_str:
                 # If last active was yesterday, increment streak
-                yesterday_str = (now.date() - datetime.timedelta(days=1)).isoformat()
+                yesterday_str = (now.date() - timedelta(days=1)).isoformat()
                 
                 if last_streak_date == yesterday_str:
                     updates["streak_count"] = current_streak + 1
