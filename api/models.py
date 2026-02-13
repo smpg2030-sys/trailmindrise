@@ -38,6 +38,7 @@ class UserResponse(BaseModel):
     profile_pic: str | None = None
     bio: str | None = None
     created_at: str | None = None
+    last_active_at: str | None = None
 
 
 class OTPRequest(BaseModel):

@@ -35,6 +35,10 @@ def get_feed(user_id: str | None = None):
     
     # If user_id is provided, only show posts from friends and self
     if user_id:
+        # Update activity
+        from services.activity import update_last_active
+        update_last_active(user_id)
+
         friendships = list(db.friendships.find({
             "$or": [
                 {"user1": user_id},

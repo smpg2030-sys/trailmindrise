@@ -222,6 +222,10 @@ def login(data: UserLogin):
     if not user.get("is_verified", False):
         raise HTTPException(status_code=403, detail="Account not verified.")
 
+    # Update Activity
+    from services.activity import update_last_active
+    update_last_active(str(user["_id"]))
+
     return UserResponse(
         id=str(user["_id"]),
         email=user.get("email"),

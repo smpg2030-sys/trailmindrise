@@ -213,6 +213,22 @@ export default function AdminPanelScreen() {
                     <div>
                       <div className="font-semibold text-slate-800">{u.full_name || "Unknown"}</div>
                       <div className="text-xs text-slate-500">{u.email}</div>
+                      {u.last_active_at && (
+                        <div className="text-[10px] mt-0.5 font-medium flex items-center gap-1">
+                          {new Date(u.last_active_at).getTime() > Date.now() - 5 * 60 * 1000 ? (
+                            <span className="text-emerald-600 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                              Online
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">
+                              Active {new Date(u.last_active_at).toLocaleDateString() === new Date().toLocaleDateString()
+                                ? new Date(u.last_active_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : new Date(u.last_active_at).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

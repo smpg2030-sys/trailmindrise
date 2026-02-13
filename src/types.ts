@@ -8,6 +8,7 @@ export interface User {
     bio?: string | null;
     mobile?: string | null;
     created_at?: string | null;
+    last_active_at?: string | null;
 }
 
 export interface Post {

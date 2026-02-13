@@ -34,7 +34,8 @@ def get_all_users(role: str | None = None):
             full_name=user.get("full_name") or None,
             role=user.get("role", "user"),
             is_verified=user.get("is_verified", False),
-            profile_pic=user.get("profile_pic")
+            profile_pic=user.get("profile_pic"),
+            last_active_at=user.get("last_active_at")
         ))
     return all_users
 
