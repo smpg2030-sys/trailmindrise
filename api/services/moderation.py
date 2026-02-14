@@ -110,6 +110,49 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
             except requests.exceptions.ConnectionError:
                 return {"status": "error", "details": "SE Img Connection Error", "code": "SE_CONN"}
 
+        # 3. Video (Synchronous)
+        if video_url:
+            video_url = str(video_url).strip()
+            if not video_url.startswith(('http://', 'https://')):
+                 return {"status": "error", "details": "SE Video: Invalid URL scheme", "code": "SE_VIDEO_BAD_URL"}
+            
+            try:
+                # Video check-sync is for short clips (< 1 min)
+                res = session.post('https://api.sightengine.com/1.0/video/check-sync.json', data={
+                    'stream_url': video_url,
+                    'models': 'nudity-2.0,wad,scam,gore',
+                    'api_user': user,
+                    'api_secret': secret
+                }, timeout=30) # Higher timeout for video processing
+                
+                if res.status_code != 200:
+                    err_msg = "Unknown Video Error"
+                    try:
+                        err_data = res.json()
+                        err_msg = err_data.get("error", {}).get("message", "No Message")
+                    except: pass
+                    return {"status": "error", "details": f"SE Video {res.status_code}: {err_msg}", "code": f"SE_VIDEO_{res.status_code}"}
+                
+                data = res.json()
+                if data.get('status') != 'success':
+                     return {"status": "error", "details": f"SE Video API Fail: {data.get('error')}", "code": "SE_VIDEO_FAIL"}
+
+                # Check summary or max scores in frames
+                # Sightengine usually returns a 'data' object with summary or specific hits
+                # For sync video, it often has a 'data' array of frames or a global summary
+                summary = data.get('data', {})
+                n = summary.get('nudity', {})
+                if (n.get('raw', 0) > 0.1 or n.get('partial', 0) > 0.2 or n.get('sexual_display', 0) > 0.1):
+                    return {"score": 1.0, "status": "rejected", "category": "video_nudity", "details": ["Visual violations in video."]}
+                
+                if (summary.get('weapon', 0) > 0.4 or summary.get('drugs', 0) > 0.4 or summary.get('gore', {}).get('prob', 0) > 0.3):
+                    return {"score": 1.0, "status": "rejected", "category": "video_violence", "details": ["Harmful video content detected."]}
+
+            except requests.exceptions.Timeout:
+                return {"status": "error", "details": "SE Video Timeout", "code": "SE_VIDEO_TIMEOUT"}
+            except requests.exceptions.ConnectionError:
+                return {"status": "error", "details": "SE Video Connection Error", "code": "SE_VIDEO_CONN"}
+
         # If we reached here, Sightengine is happy
         return {"score": 0.1, "status": "approved", "category": "safe", "details": ["Sightengine cleared content."]}
     except Exception as e:
