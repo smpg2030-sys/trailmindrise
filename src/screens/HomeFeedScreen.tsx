@@ -137,8 +137,8 @@ export default function HomeFeedScreen() {
   useEffect(() => {
     const options = {
       root: null,
-      rootMargin: '-20% 0px -20% 0px', // Shrink the detection area to the middle of screen
-      threshold: 0.5
+      rootMargin: '-25% 0px -25% 0px', // Tighter detection area for snappier transitions
+      threshold: 0.3 // Lower threshold to trigger transitions earlier
     };
 
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
@@ -154,7 +154,12 @@ export default function HomeFeedScreen() {
 
       if (mostVisibleEntry) {
         const id = (mostVisibleEntry as any).target.getAttribute('data-video-id');
-        if (id) setActiveVideoId(id);
+        if (id) {
+          setActiveVideoId(id);
+        }
+      } else {
+        // Clear active video if nothing is in the focus zone
+        setActiveVideoId(null);
       }
     };
 

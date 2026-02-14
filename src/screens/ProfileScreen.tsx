@@ -62,7 +62,8 @@ export default function ProfileScreen() {
   useEffect(() => {
     const options = {
       root: null,
-      threshold: 0.5
+      rootMargin: '-25% 0px -25% 0px',
+      threshold: 0.3
     };
 
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
@@ -76,7 +77,12 @@ export default function ProfileScreen() {
       });
       if (mostVisibleEntry) {
         const id = (mostVisibleEntry as any).target.getAttribute('data-video-id');
-        if (id) setActiveVideoId(id);
+        if (id) {
+          setActiveVideoId(id);
+        }
+      } else {
+        // Clear active video if nothing is in focus
+        setActiveVideoId(null);
       }
     };
 

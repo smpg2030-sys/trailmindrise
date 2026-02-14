@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface VideoPlayerProps {
     src: string;
@@ -18,7 +19,13 @@ export default function VideoPlayer({ src, poster, className = "", shouldPlay = 
     const [duration, setDuration] = useState(0);
     const [showControls, setShowControls] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const controlsTimeoutRef = useRef<any>(null);
+
+    // Debug logging
+    useEffect(() => {
+        console.log("VideoPlayer Props:", { src, shouldPlay });
+    }, [src, shouldPlay]);
 
     const togglePlay = () => {
         if (videoRef.current) {
@@ -72,12 +79,24 @@ export default function VideoPlayer({ src, poster, className = "", shouldPlay = 
         if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setError(null);
+            setIsLoading(false);
         }
     };
 
-    const handleError = () => {
+    const handleCanPlay = () => {
+        setIsLoading(false);
+    };
+
+    const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+        const target = e.target as HTMLVideoElement;
+        console.error("Video Error Details:", {
+            src: target.src,
+            error: target.error,
+            networkState: target.networkState,
+            readyState: target.readyState
+        });
         setError("This video journey is unavailable right now.");
-        console.error("Video Error:", src);
+        setIsLoading(false);
     };
 
     const toggleFullscreen = () => {
@@ -118,18 +137,35 @@ export default function VideoPlayer({ src, poster, className = "", shouldPlay = 
             onMouseMove={handleMouseMove}
             onMouseLeave={() => isPlaying && setShowControls(false)}
         >
+            {isLoading && !error && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/40">
+                    <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                </div>
+            )}
             {error && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/80 p-6 text-center">
-                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 text-2xl text-white/40">📽️</div>
-                    <p className="text-white text-sm font-medium mb-1 font-serif italic">{error}</p>
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Nature is resting</p>
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0f172a]/95 backdrop-blur-sm p-8 text-center">
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 shadow-2xl border border-white/10"
+                    >
+                        <span className="text-4xl">📽️</span>
+                    </motion.div>
+                    <h3 className="text-white text-lg font-serif italic mb-2 tracking-wide">{error}</h3>
+                    <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-bold">Nature is resting • Moment preserved</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-8 px-5 py-2 rounded-full border border-white/10 hover:bg-white/5 text-white/50 text-xs transition-all uppercase tracking-widest font-medium"
+                    >
+                        Try Refreshing
+                    </button>
                 </div>
             )}
             <video
                 key={src}
                 ref={videoRef}
                 src={src}
-                poster={poster}
+                poster={poster || undefined}
                 className="w-full h-full object-cover"
                 muted={isMuted}
                 loop
@@ -137,6 +173,7 @@ export default function VideoPlayer({ src, poster, className = "", shouldPlay = 
                 playsInline
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
+                onCanPlay={handleCanPlay}
                 onError={handleError}
                 onClick={togglePlay}
                 onPlay={() => setIsPlaying(true)}
