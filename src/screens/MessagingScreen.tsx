@@ -1,18 +1,60 @@
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, User } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
-const CONVOS = [
-  { id: 1, name: "Sarah Miller", preview: "I hope you are feeling better!", time: "2M AGO", unread: true },
-  { id: 2, name: "Dr. Johnson", preview: "Let's check in tomorrow.", time: "1H AGO", unread: false },
-  { id: 3, name: "Yoga Group", preview: "The morning session was great!", time: "3H AGO", unread: true },
-  { id: 4, name: "Mindfulness Community", preview: "Welcome to the group!", time: "1D AGO", unread: false },
-];
-
-type Convo = (typeof CONVOS)[number];
+interface Convo {
+  id: string;
+  name: string;
+  preview: string;
+  time: string;
+  unread: boolean;
+  profile_pic?: string | null;
+  last_active_at?: string | null;
+}
 
 export default function MessagingScreen() {
+  const { user } = useAuth();
+  const [friends, setFriends] = useState<Convo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<Convo | null>(null);
   const [messageText, setMessageText] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchFriends = async () => {
+      try {
+        const res = await fetch(`/api/friends/list?user_id=${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          const formatted = data.map((f: any) => ({
+            id: f.id,
+            name: f.full_name || f.email,
+            preview: "Start a conversation!",
+            time: "NEW",
+            unread: false,
+            profile_pic: f.profile_pic,
+            last_active_at: f.last_active_at
+          }));
+          setFriends(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to fetch friends", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFriends();
+  }, [user]);
+
+  const isOnline = (lastActiveAt: string | null | undefined) => {
+    if (!lastActiveAt) return false;
+    const lastActive = new Date(lastActiveAt);
+    const now = new Date();
+    // Consider online if active in last 5 minutes
+    return now.getTime() - lastActive.getTime() < 5 * 60 * 1000;
+  };
 
   if (selectedChat) {
     return (
@@ -21,29 +63,37 @@ export default function MessagingScreen() {
           <button
             type="button"
             onClick={() => setSelectedChat(null)}
-            className="text-xl text-slate-600"
+            className="text-xl text-slate-600 px-2"
           >
             ←
           </button>
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex-shrink-0" />
+
+          {selectedChat.profile_pic ? (
+            <img
+              src={selectedChat.profile_pic}
+              alt={selectedChat.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+              <User className="w-6 h-6 text-amber-600" />
+            </div>
+          )}
+
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-800">{selectedChat.name}</p>
-            <p className="text-xs text-green-500">Online</p>
+            <p className="font-semibold text-slate-800 truncate">{selectedChat.name}</p>
+            <p className={`text-xs ${isOnline(selectedChat.last_active_at) ? 'text-green-500' : 'text-slate-400'}`}>
+              {isOnline(selectedChat.last_active_at) ? 'Online' : 'Offline'}
+            </p>
           </div>
         </header>
 
-        <div className="flex-1 p-4 overflow-y-auto bg-slate-50">
-          <div className="mb-3">
-            <div className="inline-block bg-white p-3 rounded-xl shadow-sm">
-              <p className="text-sm text-slate-700">Hey! How are you doing today?</p>
-              <span className="text-xs text-slate-400">10:30 AM</span>
+        <div className="flex-1 p-4 overflow-y-auto bg-slate-50 flex flex-col justify-end">
+          <div className="flex flex-col items-center mb-8 opacity-40">
+            <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-2">
+              <User className="w-8 h-8 text-slate-400" />
             </div>
-          </div>
-          <div className="mb-3 text-right">
-            <div className="inline-block bg-green-500 text-white p-3 rounded-xl">
-              <p className="text-sm">I'm doing great, thanks! 😊</p>
-              <span className="text-xs text-green-100">10:32 AM</span>
-            </div>
+            <p className="text-sm text-slate-500 italic">This is the start of your chat with {selectedChat.name}</p>
           </div>
         </div>
 
@@ -51,14 +101,15 @@ export default function MessagingScreen() {
           <div className="flex gap-2">
             <input
               type="text"
-              className="flex-1 p-3 border-2 border-slate-200 rounded-full"
+              className="flex-1 p-3 border-2 border-slate-200 rounded-full outline-none focus:border-green-400 transition-colors"
               placeholder="Type a message..."
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
             />
             <button
               type="button"
-              className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-lg"
+              className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-lg shadow-md hover:bg-green-600 transition"
+              onClick={() => setMessageText("")}
             >
               📤
             </button>
@@ -81,29 +132,54 @@ export default function MessagingScreen() {
         </button>
       </header>
 
-      <ul className="divide-y divide-slate-100">
-        {CONVOS.map((c) => (
-          <li key={c.id}>
-            <button
-              type="button"
-              onClick={() => setSelectedChat(c)}
-              className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 transition"
-            >
-              <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-amber-100" />
-                {c.unread && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-800 truncate">{c.name}</p>
-                <p className="text-sm text-slate-500 truncate">{c.preview}</p>
-              </div>
-              <span className="text-xs text-slate-400 flex-shrink-0">{c.time}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center pt-20">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-slate-500">Finding your friends...</p>
+        </div>
+      ) : friends.length > 0 ? (
+        <ul className="divide-y divide-slate-100">
+          {friends.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => setSelectedChat(c)}
+                className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 transition"
+              >
+                <div className="relative flex-shrink-0">
+                  {c.profile_pic ? (
+                    <img
+                      src={c.profile_pic}
+                      alt={c.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                      <User className="w-7 h-7 text-amber-600" />
+                    </div>
+                  )}
+                  {isOnline(c.last_active_at) && (
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-white" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-800 truncate">{c.name}</p>
+                  <p className="text-sm text-slate-500 truncate">{c.preview}</p>
+                </div>
+                <span className="text-xs text-slate-400 flex-shrink-0 font-medium">{c.time}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
+          <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <User className="w-10 h-10 text-slate-300" />
+          </div>
+          <p className="text-lg font-semibold text-slate-800">No friends yet</p>
+          <p className="text-slate-500 mt-2">Add friends from the Explore page to start chatting!</p>
+        </div>
+      )}
     </div>
   );
 }

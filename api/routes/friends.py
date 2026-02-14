@@ -178,7 +178,8 @@ def list_friends(user_id: str):
                 "id": str(u["_id"]),
                 "full_name": u.get("full_name"),
                 "email": u["email"],
-                "profile_pic": u.get("profile_pic")
+                "profile_pic": u.get("profile_pic"),
+                "last_active_at": u.get("last_active_at")
             })
     return friends_info
 
