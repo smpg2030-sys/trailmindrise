@@ -59,19 +59,23 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
         # 2. Image (Aggressive)
         if image_url:
             try:
-                # Use POST to avoid 414, but keep keys in params to ensure they are found
-                # Some APIs look at query params even for POST requests
-                res = session.post('https://api.sightengine.com/1.0/check.json', 
-                    params={'models': 'nudity-2.0,wad,scam,suggestive,gore', 'api_user': user, 'api_secret': secret},
-                    data={'url': image_url},
-                    timeout=15)
+                # Standard POST approach: All arguments in the body
+                # This avoids 414 and satisfies standard form-data requirements
+                payload = {
+                    'models': 'nudity-2.0,wad,scam,suggestive,gore',
+                    'url': image_url,
+                    'api_user': user,
+                    'api_secret': secret
+                }
+                res = session.post('https://api.sightengine.com/1.0/check.json', data=payload, timeout=15)
                 
                 if res.status_code != 200:
-                    err_body = {}
-                    try: err_body = res.json()
+                    err_msg = "Unknown Error"
+                    try:
+                        err_data = res.json()
+                        err_msg = err_data.get("error", {}).get("message", "No Message")
                     except: pass
-                    err_type = err_body.get("error", {}).get("type", "Unknown")
-                    return {"status": "error", "details": f"SE Img {res.status_code}: {err_type}", "code": f"SE_{res.status_code}_{err_type}"}
+                    return {"status": "error", "details": f"SE {res.status_code}: {err_msg}", "code": f"SE_{res.status_code}_{res.reason.replace(' ', '_')}"}
                 
                 data = res.json()
                 if data.get('status') != 'success':
