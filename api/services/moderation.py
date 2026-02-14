@@ -28,6 +28,9 @@ session = requests.Session()
 retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
 session.mount('https://', HTTPAdapter(max_retries=retries))
 
+import base64
+import io
+
 def check_with_sightengine(text: str, image_url: str | None = None, video_url: str | None = None) -> dict | None:
     """Specialized moderation via Sightengine."""
     user = (SIGHTENGINE_API_USER or "").strip()
@@ -59,21 +62,28 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
         # 2. Image (Aggressive)
         if image_url:
             image_url = str(image_url).strip()
-            # If it's a data URI, Sightengine URL check won't work.
-            if image_url.startswith('data:image'):
-                return {"status": "error", "details": "SE skipping: data URI not supported via URL check", "code": "SE_SKIP_DATA_URI"}
-            if not image_url.startswith(('http://', 'https://')):
-                 return {"status": "error", "details": f"SE skipping: Invalid URL scheme (starts with {image_url[:10]}...)", "code": "SE_SKIP_INVALID_SCHEME"}
-
+            params = {
+                'models': 'nudity-2.0,wad,scam,gore',
+                'api_user': user,
+                'api_secret': secret
+            }
+            
             try:
-                # Standard POST approach. 
-                payload = {
-                    'models': 'nudity-2.0,wad,scam,gore',
-                    'url': image_url,
-                    'api_user': user,
-                    'api_secret': secret
-                }
-                res = session.post('https://api.sightengine.com/1.0/check.json', data=payload, timeout=15)
+                if image_url.startswith('data:image'):
+                    # Binary Upload for base64
+                    try:
+                        header, encoded = image_url.split(",", 1)
+                        image_data = base64.b64decode(encoded)
+                        files = {'media': ('image.jpg', io.BytesIO(image_data), 'image/jpeg')}
+                        res = session.post('https://api.sightengine.com/1.0/check.json', params=params, files=files, timeout=20)
+                    except Exception as e:
+                        return {"status": "error", "details": f"Base64 Decode Fail: {str(e)}", "code": "SE_B64_FAIL"}
+                else:
+                    # URL check
+                    if not image_url.startswith(('http://', 'https://')):
+                         return {"status": "error", "details": f"SE skipping: Invalid URL scheme (starts with {image_url[:10]}...)", "code": "SE_SKIP_INVALID_SCHEME"}
+                    
+                    res = session.post('https://api.sightengine.com/1.0/check.json', params=params, data={'url': image_url}, timeout=15)
                 
                 if res.status_code != 200:
                     err_msg = "Unknown Error"
@@ -81,8 +91,7 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
                         err_data = res.json()
                         err_msg = err_data.get("error", {}).get("message", "No Message")
                     except: pass
-                    # Include snippet of URL in details for debugging
-                    return {"status": "error", "details": f"SE {res.status_code}: {err_msg} | URL: {image_url[:40]}...", "code": f"SE_{res.status_code}"}
+                    return {"status": "error", "details": f"SE {res.status_code}: {err_msg}", "code": f"SE_{res.status_code}"}
                 
                 data = res.json()
                 if data.get('status') != 'success':
