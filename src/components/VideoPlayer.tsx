@@ -11,19 +11,23 @@ interface VideoPlayerProps {
 export default function VideoPlayer({ src, poster, className = "", autoPlay = false }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(true); // Default to muted for reliable autoplay
     const [volume, setVolume] = useState(1);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [showControls, setShowControls] = useState(true);
     const controlsTimeoutRef = useRef<any>(null);
+    const playPromiseRef = useRef<Promise<void> | null>(null);
 
     const togglePlay = () => {
         if (videoRef.current) {
             if (isPlaying) {
                 videoRef.current.pause();
             } else {
-                videoRef.current.play();
+                const playPromise = videoRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(err => console.log("Manual play failed:", err));
+                }
             }
             setIsPlaying(!isPlaying);
         }
@@ -91,20 +95,32 @@ export default function VideoPlayer({ src, poster, className = "", autoPlay = fa
         const options = {
             root: null,
             rootMargin: '0px',
-            threshold: 0.6
+            threshold: 0.4 // Trigger a bit earlier for smoother feel
         };
 
         const handleIntersection = (entries: IntersectionObserverEntry[]) => {
             entries.forEach(entry => {
                 if (videoRef.current) {
                     if (entry.isIntersecting) {
-                        // Attempt to play only if not already playing
-                        videoRef.current.play().catch(err => {
-                            // Autoplay might be blocked by browser until user interaction
-                            console.log("Autoplay blocked or failed:", err);
-                        });
+                        // Use ref to track play promise and avoid "interrupted by pause" errors
+                        playPromiseRef.current = videoRef.current.play();
+                        if (playPromiseRef.current !== undefined) {
+                            playPromiseRef.current.catch(err => {
+                                console.log("Smart Autoplay blocked or failed:", err);
+                            });
+                        }
                     } else {
-                        videoRef.current.pause();
+                        // Wait for play promise to settle before pausing if possible, 
+                        // or just pause (browsers usually handle this but can throw warnings)
+                        if (playPromiseRef.current) {
+                            playPromiseRef.current.then(() => {
+                                videoRef.current?.pause();
+                            }).catch(() => {
+                                videoRef.current?.pause();
+                            });
+                        } else {
+                            videoRef.current.pause();
+                        }
                     }
                 }
             });
@@ -135,6 +151,7 @@ export default function VideoPlayer({ src, poster, className = "", autoPlay = fa
                 autoPlay={autoPlay}
                 muted={isMuted}
                 loop
+                preload="metadata"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
                 onClick={togglePlay}
