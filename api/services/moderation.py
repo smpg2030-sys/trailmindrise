@@ -110,7 +110,8 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
             except requests.exceptions.ConnectionError:
                 return {"status": "error", "details": "SE Img Connection Error", "code": "SE_CONN"}
 
-        return None # Proceed to Gemini
+        # If we reached here, Sightengine is happy
+        return {"score": 0.1, "status": "approved", "category": "safe", "details": ["Sightengine cleared content."]}
     except Exception as e:
         return {"status": "error", "details": f"SE Ex: {str(e)}", "code": "SE_EXCEPTION"} # Fallback for unknown
 
@@ -122,10 +123,15 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
 
     # Sightengine Pass
     se = check_with_sightengine(t, image_url, video_url)
-    if se and se.get("status") == "rejected":
-        return {**se, "language": "en"}
+    if se:
+        if se.get("status") == "rejected":
+            return {**se, "language": "en"}
+        if se.get("status") == "approved":
+            # If Sightengine says it's definitely safe, don't even call Gemini (saves quota!)
+            return {**se, "language": "en"}
     
-    # Gemini Pass
+    # Gemini Pass (Fallback for SE errors or if we want extra context for specific niches)
+    # Note: We reached here if SE returned a status like "error"
     gemini_key = (GEMINI_API_KEY or "").strip()
     if not gemini_key:
         se_code = se.get("code", "SE_OK") if (se and se.get("status") == "error") else "SE_OK"
