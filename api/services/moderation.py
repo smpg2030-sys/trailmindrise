@@ -4,6 +4,8 @@ import requests
 import json
 import re
 import time
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 def is_obviously_safe(text: str) -> bool:
     """Check for extremely safe/motivational keywords."""
