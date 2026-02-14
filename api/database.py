@@ -15,6 +15,14 @@ def init_db(db):
         # Create TTL index on otp_codes collection for 5-minute expiry
         db.otp_codes.create_index("expires_at", expireAfterSeconds=0)
         
+        # Performance Indexes for Feed
+        db.posts.create_index([("status", 1), ("created_at", -1)])
+        db.posts.create_index([("user_id", 1)])
+        db.user_videos.create_index([("status", 1), ("created_at", -1)])
+        db.user_videos.create_index([("user_id", 1)])
+        db.likes.create_index([("post_id", 1)])
+        db.comments.create_index([("post_id", 1)])
+
         print("Initialized database indexes.")
     except Exception as e:
         print(f"Warning: Could not initialize database indexes: {e}")

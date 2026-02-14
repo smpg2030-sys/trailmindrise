@@ -8,43 +8,47 @@ from datetime import datetime
 router = APIRouter(prefix="/videos", tags=["videos"])
 
 @router.get("/", response_model=list[VideoResponse])
-def get_all_videos():
+def get_all_videos(limit: int = 10, skip: int = 0):
     from database import get_client
     client = get_client()
     if client is None:
         raise HTTPException(status_code=503, detail="Database connection not established")
     
-    db_mindrise = get_db() # Canonical DB for users
+    db_mindrise = get_db()
     db_videos = client[DB_NAME]
     
-    # Fetch approved videos sorted by created_at descending
-    videos_cursor = db_videos.user_videos.find({"status": "approved"}).sort("created_at", -1)
+    # 1. Fetch approved videos with pagination
+    videos_cursor = db_videos.user_videos.find({"status": "approved"}).sort("created_at", -1).skip(skip).limit(limit)
+    videos_list = list(videos_cursor)
     
+    if not videos_list:
+        return []
+
+    # 2. BULK FETCH Authors
+    author_ids = list(set(ObjectId(v["user_id"]) for v in videos_list if v.get("user_id") and v["user_id"] != "system"))
+    authors_map = {}
+    if author_ids:
+        authors = db_mindrise.users.find({"_id": {"$in": author_ids}}, {"profile_pic": 1, "full_name": 1, "email": 1})
+        authors_map = {str(a["_id"]): a for a in authors}
+
+    # 3. Assembly
     results = []
-    for doc in videos_cursor:
+    for doc in videos_list:
         doc["id"] = str(doc["_id"])
+        uid = doc.get("user_id")
         
-        # 1. Populate author information
-        user_doc = db_mindrise.users.find_one({"_id": ObjectId(doc["user_id"])})
-        if user_doc:
-            doc["author_name"] = user_doc.get("full_name") or user_doc.get("email") or "MindRise User"
-            doc["author_email"] = user_doc.get("email")
+        # Populate author data from map
+        author = authors_map.get(uid)
+        if author:
+            doc["author_name"] = author.get("full_name") or author.get("email") or "Bodham User"
+            doc["author_email"] = author.get("email")
         elif "author_name" not in doc:
-            doc["author_name"] = "MindRise User"
+            doc["author_name"] = "Bodham User"
             
-        # 2. Field Fallbacks
-        if "title" not in doc:
-            doc["title"] = "Inspirational Moment"
-        if "caption" not in doc:
-            doc["caption"] = ""
-        if "user_id" not in doc:
-            doc["user_id"] = "system"
-            
-        # 3. Model Compliance (status & created_at)
-        if "status" in doc:
-            doc["status"] = doc["status"].lower()
-        else:
-            doc["status"] = "approved"
+        if "title" not in doc: doc["title"] = "Inspirational Moment"
+        if "caption" not in doc: doc["caption"] = ""
+        
+        doc["status"] = doc.get("status", "approved").lower()
 
         if isinstance(doc.get("created_at"), datetime):
             doc["created_at"] = doc["created_at"].isoformat()

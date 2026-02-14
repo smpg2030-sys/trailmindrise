@@ -68,6 +68,8 @@ export default function HomeFeedScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [communityStories, setCommunityStories] = useState<CommunityStory[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [calculatedStreak, setCalculatedStreak] = useState<number>(0);
 
   useEffect(() => {
@@ -129,48 +131,68 @@ export default function HomeFeedScreen() {
     return streak;
   };
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === "Stories") {
+  const fetchData = async (reset = false) => {
+    if (loading) return;
+
+    // If not All Posts, pagination logic is skipped for now for simplicity
+    if (activeTab !== "All Posts") {
+      setLoading(true);
+      try {
         const res = await fetch(`${API_BASE}/community-stories/`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data)) {
-            setCommunityStories(data);
-          } else {
-            setCommunityStories([]);
-          }
+          setCommunityStories(Array.isArray(data) ? data : []);
         }
-      } else if (activeTab === "All Posts") {
-        const postsUrl = user ? `${API_BASE}/posts/?user_id=${user.id}` : `${API_BASE}/posts/`;
-        const videosUrl = `${API_BASE}/videos/`;
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
-        const [postsRes, videosRes] = await Promise.all([
-          fetch(postsUrl),
-          fetch(videosUrl)
-        ]);
+    setLoading(true);
+    const currentPage = reset ? 0 : page;
+    const skip = currentPage * 15;
 
-        let combinedFeed: any[] = [];
+    try {
+      const postsUrl = `${API_BASE}/posts/?user_id=${user?.id || ""}&limit=15&skip=${skip}`;
+      const videosUrl = `${API_BASE}/videos/?limit=5&skip=${currentPage * 5}`;
 
-        if (postsRes.ok) {
-          const postsData = await postsRes.json();
-          if (Array.isArray(postsData)) combinedFeed = [...combinedFeed, ...postsData];
-        }
+      const [postsRes, videosRes] = await Promise.all([
+        fetch(postsUrl),
+        fetch(videosUrl)
+      ]);
 
-        if (videosRes.ok) {
-          const videosData = await videosRes.json();
-          if (Array.isArray(videosData)) combinedFeed = [...combinedFeed, ...videosData];
-        }
+      let newItems: any[] = [];
+      if (postsRes.ok) {
+        const data = await postsRes.json();
+        if (Array.isArray(data)) newItems = [...newItems, ...data];
+      }
+      if (videosRes.ok) {
+        const data = await videosRes.json();
+        if (Array.isArray(data)) newItems = [...newItems, ...data];
+      }
 
-        // Sort by created_at descending
-        combinedFeed.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setPosts(combinedFeed);
+      // Sort combined in memory
+      newItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      if (reset) {
+        setPosts(newItems);
+        setPage(1);
+      } else {
+        setPosts(prev => [...prev, ...newItems]);
+        setPage(prev => prev + 1);
+      }
+
+      // If we got fewer than expected, assume no more
+      if (newItems.length < 10) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
       }
     } catch (error) {
       console.error("Error fetching feed:", error);
-      setPosts([]);
-      setCommunityStories([]);
     } finally {
       setLoading(false);
     }
@@ -203,7 +225,7 @@ export default function HomeFeedScreen() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, [activeTab]);
 
   useEffect(() => {
@@ -535,8 +557,8 @@ export default function HomeFeedScreen() {
           <GrowthTree
             variant="mini"
             createdAt={user?.created_at}
-            // Use the streak count from the user profile (calculated by backend activity)
-            manualStreak={user?.streak_count || 1}
+            // Use the streak count from journals if user profile doesn't have it explicitly
+            manualStreak={calculatedStreak || 1}
             onClick={() => navigate("/profile")}
           />
           <button
@@ -770,6 +792,18 @@ export default function HomeFeedScreen() {
                 );
 
               })
+            )}
+
+            {hasMore && posts.length > 0 && activeTab === "All Posts" && (
+              <div className="flex justify-center pb-8 pt-4">
+                <button
+                  onClick={() => fetchData()}
+                  disabled={loading}
+                  className="px-8 py-3 bg-white border-2 border-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
+                >
+                  {loading ? "Loading..." : "Load More Reflections"}
+                </button>
+              </div>
             )}
           </div>
         ) : (

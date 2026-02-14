@@ -102,52 +102,85 @@ def create_post(post: PostCreate, user_id: str, author_name: str, background_tas
     return doc
 
 @router.get("/", response_model=list[PostResponse])
-def get_feed(user_id: str | None = None):
+def get_feed(user_id: str | None = None, limit: int = 15, skip: int = 0):
     db = get_db()
     if db is None:
         raise HTTPException(status_code=503, detail="Database connection not established")
     
-    # If user_id is provided, only show posts from friends and self
+    # 1. Determine which authors we want to see
+    query_filter = {"status": "approved"}
+    
     if user_id:
-        # Update activity
         from services.activity import update_last_active
         update_last_active(user_id)
 
-        friendships = list(db.friendships.find({
-            "$or": [
-                {"user1": user_id},
-                {"user2": user_id}
-            ]
+        # Optimization: Don't fetch friendships every single time or store them in a more efficient way
+        # For now, we still check friendships but keep it simple
+        friendships = list(db.friends.find({
+            "status": "accepted",
+            "$or": [{"sender_id": user_id}, {"receiver_id": user_id}]
         }))
         friend_ids = [user_id]
         for f in friendships:
-            friend_ids.append(f["user2"] if f["user1"] == user_id else f["user1"])
-            
-        # ONLY show AI/Admin approved posts
-        posts_cursor = db.posts.find({
-            "user_id": {"$in": friend_ids},
-            "status": "approved"
-        }).sort("created_at", -1)
-    else:
-        # Fallback to all approved posts if no user_id
-        posts_cursor = db.posts.find({"status": "approved"}).sort("created_at", -1)
+            friend_ids.append(f["receiver_id"] if f["sender_id"] == user_id else f["sender_id"])
         
+        query_filter["user_id"] = {"$in": friend_ids}
+
+    # 2. Fetch Posts with Pagination
+    posts_cursor = db.posts.find(query_filter).sort("created_at", -1).skip(skip).limit(limit)
+    posts_list = list(posts_cursor)
+    
+    if not posts_list:
+        return []
+
+    # 3. BULK FETCH: Optimization to avoid N+1 queries
+    # Get all unique author IDs from the current page
+    author_ids = list(set(ObjectId(p["user_id"]) for p in posts_list if p.get("user_id") and p["user_id"] != "system"))
+    authors_map = {}
+    if author_ids:
+        authors = db.users.find({"_id": {"$in": author_ids}}, {"profile_pic": 1, "full_name": 1})
+        authors_map = {str(a["_id"]): a for a in authors}
+
+    # Get all post IDs for stats
+    post_ids = [str(p["_id"]) for p in posts_list]
+    
+    # Stats Aggregation (Likes)
+    likes_pipeline = [
+        {"$match": {"post_id": {"$in": post_ids}}},
+        {"$group": {"_id": "$post_id", "count": {"$sum": 1}}}
+    ]
+    likes_counts = {item["_id"]: item["count"] for item in db.likes.aggregate(likes_pipeline)}
+
+    # Stats Aggregation (Comments)
+    comments_pipeline = [
+        {"$match": {"post_id": {"$in": post_ids}}},
+        {"$group": {"_id": "$post_id", "count": {"$sum": 1}}}
+    ]
+    comments_counts = {item["_id"]: item["count"] for item in db.comments.aggregate(comments_pipeline)}
+
+    # My Likes
+    my_likes = set()
+    if user_id:
+        liked_by_me = db.likes.find({"post_id": {"$in": post_ids}, "user_id": user_id}, {"post_id": 1})
+        my_likes = set(item["post_id"] for item in liked_by_me)
+
+    # 4. Final Assembly
     results = []
-    for doc in posts_cursor:
-        doc["id"] = str(doc["_id"])
-        # Fetch author profile pic
-        author = db.users.find_one({"_id": ObjectId(doc["user_id"])})
+    for doc in posts_list:
+        pid = str(doc["_id"])
+        uid = doc.get("user_id")
+        
+        doc["id"] = pid
+        # Get author data from map
+        author = authors_map.get(uid)
         if author:
             doc["author_profile_pic"] = author.get("profile_pic")
+            if not doc.get("author_name"): # Use DB name if missing in post doc
+                 doc["author_name"] = author.get("full_name", "Bodham User")
         
-        # Social Stats
-        doc["likes_count"] = db.likes.count_documents({"post_id": doc["id"]})
-        doc["comments_count"] = db.comments.count_documents({"post_id": doc["id"]})
-        
-        if user_id:
-            doc["is_liked_by_me"] = bool(db.likes.find_one({"post_id": doc["id"], "user_id": user_id}))
-        else:
-            doc["is_liked_by_me"] = False
+        doc["likes_count"] = likes_counts.get(pid, 0)
+        doc["comments_count"] = comments_counts.get(pid, 0)
+        doc["is_liked_by_me"] = pid in my_likes
             
         results.append(doc)
     return results

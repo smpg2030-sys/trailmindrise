@@ -88,8 +88,36 @@ export default function VideoPlayer({ src, poster, className = "", autoPlay = fa
     };
 
     useEffect(() => {
+        const options = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.6
+        };
+
+        const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach(entry => {
+                if (videoRef.current) {
+                    if (entry.isIntersecting) {
+                        // Attempt to play only if not already playing
+                        videoRef.current.play().catch(err => {
+                            // Autoplay might be blocked by browser until user interaction
+                            console.log("Autoplay blocked or failed:", err);
+                        });
+                    } else {
+                        videoRef.current.pause();
+                    }
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(handleIntersection, options);
+        if (videoRef.current) {
+            observer.observe(videoRef.current);
+        }
+
         return () => {
             if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+            observer.disconnect();
         };
     }, []);
 
