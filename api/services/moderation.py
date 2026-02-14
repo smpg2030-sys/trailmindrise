@@ -59,25 +59,24 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
         # 2. Image (Aggressive)
         if image_url:
             try:
-                # Use POST to avoid 414 URI Too Long errors
-                res = session.post('https://api.sightengine.com/1.0/check.json', data={
-                    'models': 'nudity-2.0,wad,scam,suggestive,gore', 
-                    'url': image_url,
-                    'api_user': user, 
-                    'api_secret': secret
-                }, timeout=15)
+                # Use POST to avoid 414, but keep keys in params to ensure they are found
+                # Some APIs look at query params even for POST requests
+                res = session.post('https://api.sightengine.com/1.0/check.json', 
+                    params={'models': 'nudity-2.0,wad,scam,suggestive,gore', 'api_user': user, 'api_secret': secret},
+                    data={'url': image_url},
+                    timeout=15)
                 
                 if res.status_code != 200:
                     err_body = {}
-                    try:
-                        err_body = res.json()
+                    try: err_body = res.json()
                     except: pass
                     err_type = err_body.get("error", {}).get("type", "Unknown")
-                    return {"status": "error", "details": f"SE Img {res.status_code}: {err_type}", "code": f"SE_{res.status_code}"}
+                    return {"status": "error", "details": f"SE Img {res.status_code}: {err_type}", "code": f"SE_{res.status_code}_{err_type}"}
                 
                 data = res.json()
                 if data.get('status') != 'success':
-                     return {"status": "error", "details": f"SE API Fail: {data.get('error')}", "code": "SE_API_FAIL"}
+                     err_msg = data.get('error', {}).get('message', 'Unknown API Error')
+                     return {"status": "error", "details": f"SE API Fail: {err_msg}", "code": "SE_API_FAIL"}
 
                 n = data.get('nudity', {})
                 # Extreme thresholds for Bodham
@@ -117,6 +116,8 @@ def check_content(text: str, image_url: str | None = None, video_url: str | None
         prompt = f"Moderate for mindfulness app. Text: '{t}'. Media: {image_url or 'None'}. Return JSON {{'status':'approved'|'rejected', 'reason':'...'}}"
         
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        # Small delay to mitigate Gemini 429
+        time.sleep(1)
         # Requests Session for Gemini too
         res = session.post(url, json=payload, timeout=10)
         
