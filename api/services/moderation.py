@@ -60,9 +60,9 @@ def check_with_sightengine(text: str, image_url: str | None = None, video_url: s
         if image_url:
             try:
                 # Standard POST approach: All arguments in the body
-                # This avoids 414 and satisfies standard form-data requirements
+                # 'suggestive' is part of nudity-2.0, not a standalone model name here
                 payload = {
-                    'models': 'nudity-2.0,wad,scam,suggestive,gore',
+                    'models': 'nudity-2.0,wad,scam,gore',
                     'url': image_url,
                     'api_user': user,
                     'api_secret': secret
