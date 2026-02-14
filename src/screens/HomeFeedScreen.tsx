@@ -71,6 +71,7 @@ export default function HomeFeedScreen() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [calculatedStreak, setCalculatedStreak] = useState<number>(0);
 
   useEffect(() => {
@@ -131,6 +132,38 @@ export default function HomeFeedScreen() {
     }
     return streak;
   };
+
+  // Centralized Video Intersection Observer
+  useEffect(() => {
+    const options = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px', // Shrink the detection area to the middle of screen
+      threshold: 0.5
+    };
+
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      let mostVisibleEntry: IntersectionObserverEntry | null = null;
+
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (!mostVisibleEntry || entry.intersectionRatio > mostVisibleEntry.intersectionRatio) {
+            mostVisibleEntry = entry;
+          }
+        }
+      });
+
+      if (mostVisibleEntry) {
+        const id = (mostVisibleEntry as any).target.getAttribute('data-video-id');
+        if (id) setActiveVideoId(id);
+      }
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, options);
+    const videoElements = document.querySelectorAll('[data-video-id]');
+    videoElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [posts, activeTab]); // Re-observe when feed changes
 
   const fetchData = async (reset = false) => {
     if (loading) return;
@@ -757,10 +790,14 @@ export default function HomeFeedScreen() {
                         </div>
                       </div>
 
-                      <div className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner">
+                      <div
+                        className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner"
+                        data-video-id={item.id}
+                      >
                         <VideoPlayer
                           src={item.video_url?.startsWith("/static") ? `${BASE_URL}${item.video_url}` : (item.video_url || "")}
                           className="h-full"
+                          shouldPlay={item.id === activeVideoId}
                         />
                       </div>
 

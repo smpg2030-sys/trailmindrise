@@ -25,6 +25,7 @@ export default function AdminPanelScreen() {
   const [activeTab, setActiveTab] = useState<"users" | "pending" | "flagged" | "history" | "videos">("pending");
   const [historyFilter, setHistoryFilter] = useState<"all" | "approved" | "rejected">("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,6 +70,35 @@ export default function AdminPanelScreen() {
       setLoading(false);
     }
   }
+
+  // Centralized Video Intersection Observer
+  useEffect(() => {
+    const options = {
+      root: null,
+      threshold: 0.5
+    };
+
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      let mostVisibleEntry: IntersectionObserverEntry | null = null;
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (!mostVisibleEntry || entry.intersectionRatio > mostVisibleEntry.intersectionRatio) {
+            mostVisibleEntry = entry;
+          }
+        }
+      });
+      if (mostVisibleEntry) {
+        const id = (mostVisibleEntry as any).target.getAttribute('data-video-id');
+        if (id) setActiveVideoId(id);
+      }
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, options);
+    const videoElements = document.querySelectorAll('[data-video-id]');
+    videoElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [videos, activeTab]);
 
   const handleModeration = async (postId: string, status: "approved" | "rejected") => {
     let reason = "";
@@ -325,10 +355,14 @@ export default function AdminPanelScreen() {
                     <span className="font-bold text-sm">{video.author_name}</span>
                   </div>
                 </div>
-                <div className="bg-black rounded-lg aspect-video mb-4 relative">
+                <div
+                  className="bg-black rounded-lg aspect-video mb-4 relative"
+                  data-video-id={video.id}
+                >
                   <VideoPlayer
                     src={video.video_url.startsWith("/static") ? `${BASE_URL}${video.video_url}` : video.video_url}
                     className="w-full h-full"
+                    shouldPlay={video.id === activeVideoId}
                   />
                 </div>
                 <div className="flex gap-3">
@@ -464,10 +498,14 @@ export default function AdminPanelScreen() {
                 )}
 
                 {post.video_url && (
-                  <div className="mt-3 bg-black rounded-xl overflow-hidden aspect-[9/16] max-h-[500px] relative border border-slate-100 shadow-inner group">
+                  <div
+                    className="mt-3 bg-black rounded-xl overflow-hidden aspect-[9/16] max-h-[500px] relative border border-slate-100 shadow-inner group"
+                    data-video-id={post.id}
+                  >
                     <VideoPlayer
                       src={post.video_url.startsWith("/static") ? `${BASE_URL}${post.video_url}` : post.video_url}
                       className="w-full h-full"
+                      shouldPlay={post.id === activeVideoId}
                     />
                   </div>
                 )}

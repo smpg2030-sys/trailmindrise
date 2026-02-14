@@ -6,9 +6,10 @@ interface VideoPlayerProps {
     poster?: string;
     className?: string;
     autoPlay?: boolean;
+    shouldPlay?: boolean;
 }
 
-export default function VideoPlayer({ src, poster, className = "" }: VideoPlayerProps) {
+export default function VideoPlayer({ src, poster, className = "", shouldPlay = false }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(true); // Default to muted for reliable autoplay
@@ -16,6 +17,7 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [showControls, setShowControls] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const controlsTimeoutRef = useRef<any>(null);
 
     const togglePlay = () => {
@@ -69,7 +71,13 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
     const handleLoadedMetadata = () => {
         if (videoRef.current) {
             setDuration(videoRef.current.duration);
+            setError(null);
         }
+    };
+
+    const handleError = () => {
+        setError("This video journey is unavailable right now.");
+        console.error("Video Error:", src);
     };
 
     const toggleFullscreen = () => {
@@ -91,38 +99,18 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
     };
 
     useEffect(() => {
-        const options = {
-            root: null,
-            rootMargin: '20px',
-            threshold: 0.5
-        };
-
-        const handleIntersection = (entries: IntersectionObserverEntry[]) => {
-            entries.forEach(entry => {
-                if (videoRef.current) {
-                    if (entry.isIntersecting) {
-                        videoRef.current.play().catch(err => {
-                            if (err.name !== 'AbortError') {
-                                console.log("Autoplay check:", err.name);
-                            }
-                        });
-                    } else {
-                        videoRef.current.pause();
-                    }
-                }
-            });
-        };
-
-        const observer = new IntersectionObserver(handleIntersection, options);
         if (videoRef.current) {
-            observer.observe(videoRef.current);
+            if (shouldPlay) {
+                videoRef.current.play().catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.log("Autoplay blocked:", err.name);
+                    }
+                });
+            } else {
+                videoRef.current.pause();
+            }
         }
-
-        return () => {
-            if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-            observer.disconnect();
-        };
-    }, [src]);
+    }, [shouldPlay, src]);
 
     return (
         <div
@@ -130,6 +118,13 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
             onMouseMove={handleMouseMove}
             onMouseLeave={() => isPlaying && setShowControls(false)}
         >
+            {error && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/80 p-6 text-center">
+                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 text-2xl text-white/40">📽️</div>
+                    <p className="text-white text-sm font-medium mb-1 font-serif italic">{error}</p>
+                    <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Nature is resting</p>
+                </div>
+            )}
             <video
                 key={src}
                 ref={videoRef}
@@ -142,6 +137,7 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
                 playsInline
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
+                onError={handleError}
                 onClick={togglePlay}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}

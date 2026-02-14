@@ -45,6 +45,7 @@ export default function ProfileScreen() {
   const [newEmail, setNewEmail] = useState("");
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [calculatedStreak, setCalculatedStreak] = useState<number>(0);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOwnProfile && currentUser) {
@@ -56,6 +57,35 @@ export default function ProfileScreen() {
       fetchTargetUser(userId);
     }
   }, [userId, currentUser, isOwnProfile]);
+
+  // Centralized Video Intersection Observer
+  useEffect(() => {
+    const options = {
+      root: null,
+      threshold: 0.5
+    };
+
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      let mostVisibleEntry: IntersectionObserverEntry | null = null;
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (!mostVisibleEntry || entry.intersectionRatio > mostVisibleEntry.intersectionRatio) {
+            mostVisibleEntry = entry;
+          }
+        }
+      });
+      if (mostVisibleEntry) {
+        const id = (mostVisibleEntry as any).target.getAttribute('data-video-id');
+        if (id) setActiveVideoId(id);
+      }
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, options);
+    const videoElements = document.querySelectorAll('[data-video-id]');
+    videoElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [myVideos, activeTab]);
 
   const fetchTargetUser = async (id: string) => {
     try {
@@ -766,10 +796,14 @@ export default function ProfileScreen() {
               ) : (
                 myVideos.map(video => (
                   <div key={video.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm relative group">
-                    <div className="aspect-[9/16] bg-black flex items-center justify-center overflow-hidden">
+                    <div
+                      className="aspect-[9/16] bg-black flex items-center justify-center overflow-hidden"
+                      data-video-id={video.id}
+                    >
                       <VideoPlayer
                         src={video.video_url.startsWith("/static") ? `${BASE_URL}${video.video_url}` : video.video_url}
                         className="w-full h-full"
+                        shouldPlay={video.id === activeVideoId}
                       />
                     </div>
                     <div className="p-3">
