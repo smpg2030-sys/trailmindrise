@@ -17,7 +17,6 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
     const [duration, setDuration] = useState(0);
     const [showControls, setShowControls] = useState(true);
     const controlsTimeoutRef = useRef<any>(null);
-    const playPromiseRef = useRef<Promise<void> | null>(null);
 
     const togglePlay = () => {
         if (videoRef.current) {
@@ -92,38 +91,23 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
     };
 
     useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.load();
-        }
-    }, [src]);
-
-    useEffect(() => {
         const options = {
             root: null,
-            rootMargin: '10px',
-            threshold: 0.2
+            rootMargin: '20px',
+            threshold: 0.5
         };
 
         const handleIntersection = (entries: IntersectionObserverEntry[]) => {
             entries.forEach(entry => {
                 if (videoRef.current) {
                     if (entry.isIntersecting) {
-                        playPromiseRef.current = videoRef.current.play();
-                        if (playPromiseRef.current !== undefined) {
-                            playPromiseRef.current.catch(err => {
+                        videoRef.current.play().catch(err => {
+                            if (err.name !== 'AbortError') {
                                 console.log("Autoplay check:", err.name);
-                            });
-                        }
+                            }
+                        });
                     } else {
-                        if (playPromiseRef.current) {
-                            playPromiseRef.current.then(() => {
-                                videoRef.current?.pause();
-                            }).catch(() => {
-                                videoRef.current?.pause();
-                            });
-                        } else {
-                            videoRef.current.pause();
-                        }
+                        videoRef.current.pause();
                     }
                 }
             });
@@ -147,11 +131,12 @@ export default function VideoPlayer({ src, poster, className = "" }: VideoPlayer
             onMouseLeave={() => isPlaying && setShowControls(false)}
         >
             <video
+                key={src}
                 ref={videoRef}
                 src={src}
                 poster={poster}
                 className="w-full h-full object-cover"
-                muted={true}
+                muted={isMuted}
                 loop
                 preload="auto"
                 playsInline
