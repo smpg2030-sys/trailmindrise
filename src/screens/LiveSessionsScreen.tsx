@@ -6,13 +6,17 @@ import { Calendar, Users, Play, Lock, Sparkles, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LiveSessionsScreen() {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const navigate = useNavigate();
     const [rooms, setRooms] = useState<LiveRoom[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"live" | "upcoming">("live");
 
     const BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api");
+
+    useEffect(() => {
+        refreshUser();
+    }, []);
 
     useEffect(() => {
         fetchRooms();

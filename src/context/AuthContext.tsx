@@ -4,6 +4,7 @@ import { User } from "../types";
 type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
+  refreshUser: () => Promise<void>;
   logout: () => void;
 };
 
@@ -21,16 +22,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api");
+
   const setUser = (u: User | null) => {
     setUserState(u);
     if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
     else localStorage.removeItem(STORAGE_KEY);
   };
 
+  const refreshUser = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${BASE_URL}/auth/user/${user.id}`);
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error("Failed to refresh user profile", error);
+    }
+  };
+
   const logout = () => setUser(null);
 
+  // Sync on mount
+  React.useEffect(() => {
+    if (user?.id) {
+      refreshUser();
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

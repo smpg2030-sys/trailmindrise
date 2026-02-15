@@ -198,6 +198,8 @@ def verify_otp(data: OTPVerify):
         phone_number=user.get("phone_number"),
         full_name=user.get("full_name"),
         role=user.get("role", "user"),
+        is_verified_host=user.get("is_verified_host", False),
+        host_status=user.get("host_status", "none"),
         is_verified=True,
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio"),
@@ -234,6 +236,8 @@ def login(data: UserLogin):
         is_phone_verified=user.get("is_phone_verified", False),
         full_name=user.get("full_name") or None,
         role=user.get("role", "user"),
+        is_verified_host=user.get("is_verified_host", False),
+        host_status=user.get("host_status", "none"),
         is_verified=True,
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio"),
@@ -281,7 +285,7 @@ async def reset_password(data: PasswordResetConfirm, background_tasks: Backgroun
         
     if user.get("otp") != data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
-        
+    
     # Update password and clear OTP
     new_hash = hash_password(data.new_password)
     db.users.update_one(
@@ -321,6 +325,8 @@ def get_user(user_id: str):
         email=user["email"],
         full_name=user.get("full_name"),
         role=user.get("role", "user"),
+        is_verified_host=user.get("is_verified_host", False),
+        host_status=user.get("host_status", "none"),
         is_verified=user.get("is_verified", False),
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio"),
@@ -356,6 +362,8 @@ def update_profile_pic(user_id: str, data: ProfilePicUpdate):
         email=result["email"],
         full_name=result.get("full_name"),
         role=result.get("role", "user"),
+        is_verified_host=result.get("is_verified_host", False),
+        host_status=result.get("host_status", "none"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
@@ -388,6 +396,8 @@ def delete_profile_pic(user_id: str):
         email=result["email"],
         full_name=result.get("full_name"),
         role=result.get("role", "user"),
+        is_verified_host=result.get("is_verified_host", False),
+        host_status=result.get("host_status", "none"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
@@ -423,6 +433,8 @@ def update_bio(user_id: str, data: BioUpdate):
         email=result["email"],
         full_name=result.get("full_name"),
         role=result.get("role", "user"),
+        is_verified_host=result.get("is_verified_host", False),
+        host_status=result.get("host_status", "none"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
@@ -474,6 +486,8 @@ def update_profile(user_id: str, data: UserUpdate):
         mobile=result.get("mobile"),
         full_name=result.get("full_name"),
         role=result.get("role", "user"),
+        is_verified_host=result.get("is_verified_host", False),
+        host_status=result.get("host_status", "none"),
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
