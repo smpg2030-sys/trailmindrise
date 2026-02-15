@@ -84,7 +84,8 @@ def create_room(room: RoomCreate, user_id: str):
     
     # Security: Validate role and verification status
     user = db.users.find_one({"_id": ObjectId(user_id)})
-    if not user or user.get("role") != "host" or not user.get("is_verified_host"):
+    allowed_roles = ["host", "admin"]
+    if not user or user.get("role") not in allowed_roles or not user.get("is_verified_host"):
         raise HTTPException(status_code=403, detail="Only verified hosts can create rooms")
     
     doc = room.dict()
