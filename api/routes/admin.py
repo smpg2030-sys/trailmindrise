@@ -77,7 +77,7 @@ def toggle_host_verification(user_id: str, role: str):
         {"$set": {
             "is_verified_host": new_status,
             "host_status": "approved" if new_status else "none",
-            "role": "host" if new_status else "user"
+            "role": user.get("role") if user.get("role") == "admin" else ("host" if new_status else "user")
         }}
     )
     
