@@ -91,7 +91,7 @@ export default function ProfileScreen() {
     videoElements.forEach(el => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [myVideos, activeTab]);
+  }, [myVideos, myPosts, activeTab]);
 
   const fetchTargetUser = async (id: string) => {
     try {
@@ -484,17 +484,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const getStatusBadge = (post: Post) => {
-    switch (post.status) {
-      case "approved":
-        return <span className="px-2.5 py-1 bg-green-100/50 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-green-200">Approved</span>;
-      case "rejected":
-        return <span className="px-2.5 py-1 bg-rose-100/50 text-rose-700 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-rose-200">Rejected</span>;
-      default:
-        return <span className="px-2.5 py-1 bg-amber-100/50 text-amber-700 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-amber-200">Pending</span>;
-    }
-  };
-
 
   if (!targetUser) return null;
   const isAdmin = currentUser?.role === "admin";
@@ -770,6 +759,7 @@ export default function ProfileScreen() {
                     <PostCard
                       post={post}
                       currentUserId={currentUser?.id || ""}
+                      activeVideoId={activeVideoId}
                       onLikeToggle={handleLikeToggle}
                       onCommentSubmit={handleCommentSubmit}
                       onDelete={handleDeletePost}

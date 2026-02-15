@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
 import { Post, Comment } from "../types";
+import VideoPlayer from "./VideoPlayer";
 
 interface PostCardProps {
     post: Post;
     currentUserId: string;
+    activeVideoId?: string | null;
     onLikeToggle: (postId: string) => void;
     onCommentSubmit: (postId: string, content: string) => void;
     onDelete?: (postId: string) => void;
 }
 
-export default function PostCard({ post, currentUserId, onLikeToggle, onCommentSubmit, onDelete }: PostCardProps) {
+export default function PostCard({ post, currentUserId, activeVideoId, onLikeToggle, onCommentSubmit, onDelete }: PostCardProps) {
     const [commentText, setCommentText] = useState("");
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState<Comment[]>([]);
@@ -94,8 +96,15 @@ export default function PostCard({ post, currentUserId, onLikeToggle, onCommentS
                 </div>
             )}
             {post.video_url && (
-                <div className="w-full aspect-video bg-black">
-                    <video src={post.video_url} controls className="w-full h-full" />
+                <div
+                    className="w-full aspect-video bg-black"
+                    data-video-id={post.id}
+                >
+                    <VideoPlayer
+                        src={post.video_url}
+                        className="w-full h-full"
+                        shouldPlay={post.id === activeVideoId}
+                    />
                 </div>
             )}
 
