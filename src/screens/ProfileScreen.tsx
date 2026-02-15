@@ -1,21 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Settings, Shield, Trash2, MoreVertical, Grid, Bookmark, Camera, Video as VideoIcon, Users, UserPlus, CheckCircle2, Clock } from "lucide-react";
-import { User, Post, Video, FriendRequest, AppNotification, AppFriend } from "../types";
+import {
+  Grid,
+  Users,
+  Bookmark,
+  Settings,
+  MoreVertical,
+  Camera,
+  Shield,
+  UserPlus,
+  CheckCircle2,
+  Clock,
+  LogOut
+} from "lucide-react";
+import { User, Post, AppFriend } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import VideoPlayer from "../components/VideoPlayer";
 import GrowthTree from "../components/GrowthTree";
 import PostCard from "../components/PostCard";
 
-const getApiBase = () => {
-  const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api");
-  if (base.startsWith("http")) return base;
-  return window.location.origin + (base.startsWith("/") ? "" : "/") + base;
-};
-
-const API_BASE = getApiBase();
-const BASE_URL = API_BASE.endsWith("/api") ? API_BASE.slice(0, -4) : API_BASE;
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api")).startsWith("http")
+  ? (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api"))
+  : window.location.origin + ((import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api")).startsWith("/") ? "" : "/") + (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000/api" : "/api"));
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -27,19 +33,16 @@ export default function ProfileScreen() {
   const targetUserId = userId || currentUser?.id;
 
   const [targetUser, setTargetUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<"posts" | "saved" | "videos" | "friends">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "saved" | "friends">("posts");
   const [showSettings, setShowSettings] = useState(false);
   const [myPosts, setMyPosts] = useState<Post[]>([]);
-  const [myVideos, setMyVideos] = useState<Video[]>([]);
   const [friendsList, setFriendsList] = useState<AppFriend[]>([]);
   const [friendshipStatus, setFriendshipStatus] = useState<"none" | "pending" | "received" | "accepted">("none");
 
   const [loadingPosts, setLoadingPosts] = useState(false);
-  const [loadingVideos, setLoadingVideos] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioDraft, setBioDraft] = useState("");
   const [isSavingBio, setIsSavingBio] = useState(false);
-
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -56,6 +59,18 @@ export default function ProfileScreen() {
       fetchTargetUser(userId);
     }
   }, [userId, currentUser, isOwnProfile]);
+
+  const fetchTargetUser = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/user/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTargetUser(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch target user", e);
+    }
+  };
 
   // Centralized Video Intersection Observer
   useEffect(() => {
@@ -80,7 +95,6 @@ export default function ProfileScreen() {
           setActiveVideoId(id);
         }
       } else {
-        // Clear active video if nothing is in focus
         setActiveVideoId(null);
       }
     };
@@ -90,20 +104,7 @@ export default function ProfileScreen() {
     videoElements.forEach(el => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [myVideos, myPosts, activeTab]);
-
-  const fetchTargetUser = async (id: string) => {
-    try {
-      const res = await fetch(`${API_BASE}/auth/user/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTargetUser(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch target user", e);
-    } finally {
-    }
-  };
+  }, [myPosts, activeTab]);
 
   useEffect(() => {
     if ((location.state as any)?.openEdit && isOwnProfile) {
@@ -116,7 +117,6 @@ export default function ProfileScreen() {
     if (targetUserId) {
       if (isOwnProfile) refreshUser();
       fetchMyPosts();
-      fetchMyVideos();
       fetchFriends();
       if (!isOwnProfile) checkFriendship();
     }
@@ -154,33 +154,40 @@ export default function ProfileScreen() {
     if (!targetUserId) return;
     setLoadingPosts(true);
     try {
-      const res = await fetch(`${API_BASE}/posts/my?user_id=${targetUserId}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Filter out rejected posts
-        setMyPosts(Array.isArray(data) ? data.filter((p: any) => p.status !== 'rejected') : []);
+      const [postsRes, videosRes] = await Promise.all([
+        fetch(`${API_BASE}/posts/my?user_id=${targetUserId}`),
+        fetch(`${API_BASE}/videos/user/${targetUserId}`)
+      ]);
+
+      let allContent: any[] = [];
+
+      if (postsRes.ok) {
+        const postsData = await postsRes.json();
+        if (Array.isArray(postsData)) {
+          allContent = [...allContent, ...postsData.filter((p: any) => p.status !== 'rejected')];
+        }
       }
+
+      if (videosRes.ok) {
+        const videosData = await videosRes.json();
+        if (Array.isArray(videosData)) {
+          const normalizedVideos = videosData
+            .filter((v: any) => v.status !== 'rejected')
+            .map((v: any) => ({
+              ...v,
+              content: v.caption || v.content || "",
+            }));
+          allContent = [...allContent, ...normalizedVideos];
+        }
+      }
+
+      // Sort combined by created_at newest first
+      allContent.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setMyPosts(allContent);
     } catch (error) {
-      console.error("Failed to fetch posts", error);
+      console.error("Failed to fetch profile content", error);
     } finally {
       setLoadingPosts(false);
-    }
-  };
-
-  const fetchMyVideos = async () => {
-    if (!targetUserId) return;
-    setLoadingVideos(true);
-    try {
-      const res = await fetch(`${API_BASE}/videos/user/${targetUserId}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Filter out rejected videos
-        setMyVideos(Array.isArray(data) ? data.filter((v: any) => v.status !== 'rejected') : []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch videos", error);
-    } finally {
-      setLoadingVideos(false);
     }
   };
 
@@ -199,7 +206,7 @@ export default function ProfileScreen() {
         // Find the request ID from notifications or requests list (simplified for now: we need an endpoint to get request id by users)
         // Or refactor respond to take from/to users.
         // For now, let's just assume we need to respond.
-        // Actually, backend respond takes request_id. 
+        // Actually, backend respond takes request_id.
         // Let's add an endpoint or search for it.
         alert("Please respond to the friend request in your notifications 🔔");
       }
@@ -221,23 +228,6 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error("Error deleting post", error);
-    }
-  };
-
-
-  const handleDeleteVideo = async (videoId: string) => {
-    if (!confirm("Are you sure you want to delete this video?")) return;
-    try {
-      const res = await fetch(`${API_BASE}/videos/${videoId}?user_id=${currentUser?.id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setMyVideos(prev => prev.filter(v => v.id !== videoId));
-      } else {
-        alert("Failed to delete video");
-      }
-    } catch (error) {
-      console.error("Error deleting video", error);
     }
   };
 
@@ -577,20 +567,16 @@ export default function ProfileScreen() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
             <p className="text-2xl font-bold text-slate-800">{myPosts.length}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Posts</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-            <p className="text-2xl font-bold text-slate-800">{myVideos.length}</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Videos</p>
-          </div>
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
             <p className="text-2xl font-bold text-slate-800">{friendsList.length}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Friends</p>
           </div>
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-2xl shadow-lg shadow-emerald-200 text-center text-white transform scale-105">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl shadow-lg shadow-emerald-200 text-center text-white">
             <p className="text-2xl font-bold text-white">
               {(isOwnProfile || friendshipStatus === "accepted") ? (targetUser.streak_count || 0) : "—"}
             </p>
@@ -622,17 +608,6 @@ export default function ProfileScreen() {
           >
             <Grid className="w-4 h-4" />
             Posts
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("videos")}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === "videos"
-              ? "bg-white text-slate-800 shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-              }`}
-          >
-            <VideoIcon className="w-4 h-4" />
-            Videos
           </button>
           <button
             type="button"
@@ -708,59 +683,6 @@ export default function ProfileScreen() {
             </motion.div>
           )}
 
-          {activeTab === "videos" && (
-            <motion.div
-              key="videos"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-            >
-              {loadingVideos ? (
-                <div className="col-span-full py-12 text-center text-slate-400">Loading videos...</div>
-              ) : myVideos.length === 0 ? (
-                <div className="col-span-full py-16 text-center">
-                  <VideoIcon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                  <p className="text-slate-500 font-bold">No videos yet</p>
-                </div>
-              ) : (
-                myVideos.map(video => (
-                  <div key={video.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm relative group">
-                    <div
-                      className="aspect-[9/16] bg-black flex items-center justify-center overflow-hidden"
-                      data-video-id={video.id}
-                    >
-                      <VideoPlayer
-                        src={video.video_url.startsWith("/static") ? `${BASE_URL}${video.video_url}` : video.video_url}
-                        className="w-full h-full"
-                        shouldPlay={video.id === activeVideoId}
-                      />
-                    </div>
-                    <div className="p-3">
-                      <h4 className="text-xs font-bold text-slate-800 truncate mb-1">
-                        {video.title || "Untitled Reel"}
-                      </h4>
-                      {video.caption && (
-                        <p className="text-[10px] text-slate-500 line-clamp-2 mb-2 italic">
-                          "{video.caption}"
-                        </p>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                          Approved
-                        </span>
-                        <button
-                          onClick={() => handleDeleteVideo(video.id)}
-                          className="p-1.5 text-slate-300 hover:text-rose-500 rounded-full hover:bg-rose-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </motion.div>
-          )}
 
           {activeTab === "saved" && isOwnProfile && (
             <motion.div
