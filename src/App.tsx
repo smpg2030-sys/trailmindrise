@@ -8,7 +8,9 @@ import InnerApp from "./InnerApp";
 import HomeFeedScreen from "./screens/HomeFeedScreen";
 import ExploreScreen from "./screens/ExploreScreen";
 import MessagingScreen from "./screens/MessagingScreen";
-import MindRoomsScreen from "./screens/MindRoomsScreen";
+import LiveSessionsScreen from "./screens/LiveSessionsScreen";
+import SessionRoomScreen from "./screens/SessionRoomScreen";
+import HostDashboardScreen from "./screens/HostDashboardScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import TherapistSupportScreen from "./screens/TherapistSupportScreen";
 import AdminPanelScreen from "./screens/AdminPanelScreen";
@@ -100,7 +102,9 @@ function AppRoutes() {
           <Route index element={<HomeFeedScreen />} />
           <Route path="explore" element={<ExploreScreen />} />
           <Route path="messages" element={<MessagingScreen />} />
-          <Route path="focus" element={<MindRoomsScreen />} />
+          <Route path="focus" element={<LiveSessionsScreen />} />
+          <Route path="sessions/host" element={<HostDashboardScreen />} />
+          <Route path="sessions/:roomId" element={<SessionRoomScreen />} />
           <Route path="profile" element={<ProfileScreen />} />
           <Route path="profile/:userId" element={<ProfileScreen />} />
         </Route>

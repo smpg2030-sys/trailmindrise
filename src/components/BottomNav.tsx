@@ -6,7 +6,7 @@ const navItems = [
   { to: "/", label: "Home", Icon: Home },
   { to: "/explore", label: "Explore", Icon: Compass },
   { to: "/messages", label: "Messages", Icon: MessageCircle },
-  { to: "/focus", label: "Focus", Icon: Zap },
+  { to: "/focus", label: "Rooms", Icon: Zap },
   { to: "/profile", label: "Profile", Icon: User },
 ];
 

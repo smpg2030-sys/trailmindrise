@@ -2,14 +2,59 @@ export interface User {
     id: string;
     email: string;
     full_name?: string | null;
-    role?: string;
+    role?: string; // "user" | "host" | "admin"
     is_verified?: boolean;
+    isVerifiedHost?: boolean;
+    hostStatus?: "none" | "pending" | "approved" | "rejected";
     profile_pic?: string | null;
     bio?: string | null;
     mobile?: string | null;
     created_at?: string | null;
     last_active_at?: string | null;
     streak_count?: number;
+}
+
+export interface LiveRoom {
+    id: string;
+    hostId: string;
+    title: string;
+    type: "group" | "private";
+    access: "free" | "paid";
+    price: number;
+    scheduledAt: string;
+    duration: number; // in minutes
+    status: "upcoming" | "live" | "ended";
+    totalAttendees: number;
+    totalRevenue: number;
+    platformCommission: number;
+    createdAt: string;
+}
+
+export interface SessionAttendance {
+    roomId: string;
+    userId: string;
+    joinedAt: string;
+    leftAt?: string;
+    stayDuration: number;
+    paymentStatus: "paid" | "free";
+}
+
+export interface SessionPayment {
+    userId: string;
+    roomId: string;
+    amount: number;
+    transactionId: string;
+    paymentStatus: "success" | "failed";
+    createdAt: string;
+}
+
+export interface HostEarnings {
+    hostId: string;
+    roomId: string;
+    grossAmount: number;
+    commissionAmount: number;
+    netAmount: number;
+    payoutStatus: "processing" | "completed";
 }
 
 export interface Post {

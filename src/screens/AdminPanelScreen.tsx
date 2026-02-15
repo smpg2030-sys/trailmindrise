@@ -22,7 +22,7 @@ export default function AdminPanelScreen() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [stats, setStats] = useState({ total_users: 0, pending_moderation: 0, email_users: 0, mobile_users: 0, flagged_posts: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"users" | "pending" | "flagged" | "history" | "videos">("pending");
+  const [activeTab, setActiveTab] = useState<"users" | "pending" | "flagged" | "history" | "videos" | "sessions">("pending");
   const [historyFilter, setHistoryFilter] = useState<"all" | "approved" | "rejected">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -63,6 +63,9 @@ export default function AdminPanelScreen() {
           }
           setPosts(data);
         }
+      } else if (activeTab === "sessions") {
+        const res = await fetch(`${API_BASE}/sessions/rooms?status=live`);
+        if (res.ok) setPosts(await res.json()); // Repurposing posts state for rooms for simplicity in this view
       }
     } catch (err) {
       console.error("Failed to fetch admin data:", err);
@@ -265,6 +268,12 @@ export default function AdminPanelScreen() {
           History
         </button>
         <button
+          onClick={() => setActiveTab("sessions")}
+          className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "sessions" ? "border-b-2 border-indigo-500 text-indigo-600" : "text-slate-500"}`}
+        >
+          Sessions
+        </button>
+        <button
           onClick={() => setActiveTab("users")}
           className={`pb-2 px-4 font-medium text-sm whitespace-nowrap transition ${activeTab === "users" ? "border-b-2 border-green-500 text-green-600" : "text-slate-500"}`}
         >
@@ -383,6 +392,63 @@ export default function AdminPanelScreen() {
                     className="flex-1 bg-rose-50 text-rose-600 py-3 rounded-xl text-sm font-bold hover:bg-rose-100 transition"
                   >
                     Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : activeTab === "sessions" ? (
+        <div className="space-y-4">
+          {posts.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
+              <VideoIcon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+              <p className="text-slate-500">No active sessions found.</p>
+            </div>
+          ) : (
+            posts.map((room: any) => (
+              <div key={room.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-slate-800">{room.title}</h3>
+                    <p className="text-xs text-slate-500">Host ID: {room.host_id}</p>
+                  </div>
+                  <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase rounded tracking-wider">
+                    {room.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+                  <div className="bg-slate-50 p-2 rounded-xl">
+                    <p className="text-[8px] uppercase text-slate-400 font-bold mb-1">Attendees</p>
+                    <p className="text-xs font-bold text-slate-800">{room.total_attendees || 0}</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-xl">
+                    <p className="text-[8px] uppercase text-slate-400 font-bold mb-1">Revenue</p>
+                    <p className="text-xs font-bold text-emerald-600">${room.total_revenue || 0}</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-xl">
+                    <p className="text-[8px] uppercase text-slate-400 font-bold mb-1">Commission</p>
+                    <p className="text-xs font-bold text-indigo-600">${room.platform_commission || 0}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (confirm("Cancel this session?")) {
+                        fetch(`${API_BASE}/sessions/end?room_id=${room.id}&host_id=${room.host_id}`, { method: 'POST' }).then(() => fetchData());
+                      }
+                    }}
+                    className="flex-1 bg-rose-50 text-rose-600 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-100 transition"
+                  >
+                    Cancel Session
+                  </button>
+                  <button
+                    onClick={() => handleBanUser(room.host_id)}
+                    className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+                  >
+                    Suspend Host
                   </button>
                 </div>
               </div>

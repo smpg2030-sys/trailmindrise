@@ -32,7 +32,9 @@ class UserResponse(BaseModel):
     mobile: str | None = None
     phone_number: str | None = None
     is_phone_verified: bool = False
-    role: str = "user"
+    role: str = "user" # "user", "host", "admin"
+    is_verified_host: bool = False
+    host_status: str = "none" # "none", "pending", "approved", "rejected"
     full_name: str | None = None
     is_verified: bool = False
     profile_pic: str | None = None
