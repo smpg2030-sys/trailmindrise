@@ -6,8 +6,8 @@ import { Bell } from "lucide-react";
 const CATEGORIES = [
   { icon: "☀️", title: "Meditation", subtitle: "120+ Sessions", bg: "bg-emerald-100" },
   { icon: "🖼️", title: "Journaling", subtitle: "Daily Prompts", bg: "bg-sky-100" },
-  { icon: "👥", title: "Community", subtitle: "Active Stories", bg: "bg-violet-100" },
-  { icon: "📚", title: "E-Books", subtitle: "Premium Library", bg: "bg-amber-100" },
+  { icon: "🛒", title: "Marketplace", subtitle: "Mindful Shop", bg: "bg-indigo-100" },
+  { icon: "🏪", title: "Seller Hub", subtitle: "Manage Store", bg: "bg-violet-100" },
 ];
 
 const EBOOKS = [
@@ -79,6 +79,8 @@ export default function ExploreScreen() {
                 if (cat.title === "E-Books") setShowEbooks(true);
                 if (cat.title === "Community") navigate("/community-stories");
                 if (cat.title === "Journaling") navigate("/journal");
+                if (cat.title === "Marketplace") navigate("/marketplace");
+                if (cat.title === "Seller Hub") navigate("/seller/dashboard");
               }}
               className={`${cat.bg} rounded-xl p-6 text-left transition hover:opacity-90`}
             >

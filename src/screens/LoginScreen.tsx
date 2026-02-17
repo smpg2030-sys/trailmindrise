@@ -99,6 +99,9 @@ export default function LoginScreen() {
           email: data.email,
           mobile: data.mobile,
           full_name: data.full_name ?? null,
+          role: data.role || "user",
+          seller_status: data.seller_status || "none",
+          business_name: data.business_name
         });
         navigate("/", { replace: true });
         return;

@@ -547,6 +547,14 @@ export default function ProfileScreen() {
             <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
               {targetUser.role}
             </span>
+            {isOwnProfile && targetUser.seller_status === "approved" && (
+              <button
+                onClick={() => navigate("/seller/dashboard")}
+                className="text-violet-600 text-[10px] uppercase font-bold tracking-wider bg-violet-50 px-3 py-1 rounded-full border border-violet-100 hover:bg-violet-100 transition-colors shadow-sm"
+              >
+                🏪 Seller Dashboard
+              </button>
+            )}
             {isOwnProfile && targetUser.profile_pic && (
               <button
                 onClick={handleDeleteProfilePic}
