@@ -203,6 +203,9 @@ def verify_otp(data: OTPVerify):
         is_verified=True,
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio"),
+        streak_count=user.get("streak_count", 0),
+        last_active_at=user.get("last_active_at"),
+        last_streak_date=user.get("last_streak_date"),
         created_at=ObjectId(user["_id"]).generation_time.isoformat()
     )
 
@@ -241,6 +244,9 @@ def login(data: UserLogin):
         is_verified=True,
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio"),
+        streak_count=user.get("streak_count", 0),
+        last_active_at=user.get("last_active_at"),
+        last_streak_date=user.get("last_streak_date"),
         created_at=ObjectId(user["_id"]).generation_time.isoformat()
     )
 @router.post("/forgot-password")
@@ -330,6 +336,9 @@ def get_user(user_id: str):
         is_verified=user.get("is_verified", False),
         profile_pic=user.get("profile_pic"),
         bio=user.get("bio"),
+        streak_count=user.get("streak_count", 0),
+        last_active_at=user.get("last_active_at"),
+        last_streak_date=user.get("last_streak_date"),
         created_at=ObjectId(user["_id"]).generation_time.isoformat()
     )
 
@@ -367,6 +376,9 @@ def update_profile_pic(user_id: str, data: ProfilePicUpdate):
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
+        streak_count=result.get("streak_count", 0),
+        last_active_at=result.get("last_active_at"),
+        last_streak_date=result.get("last_streak_date"),
         created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
 
@@ -401,6 +413,9 @@ def delete_profile_pic(user_id: str):
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
+        streak_count=result.get("streak_count", 0),
+        last_active_at=result.get("last_active_at"),
+        last_streak_date=result.get("last_streak_date"),
         created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
 
@@ -438,6 +453,9 @@ def update_bio(user_id: str, data: BioUpdate):
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
+        streak_count=result.get("streak_count", 0),
+        last_active_at=result.get("last_active_at"),
+        last_streak_date=result.get("last_streak_date"),
         created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
 class UserUpdate(BaseModel):
@@ -491,5 +509,8 @@ def update_profile(user_id: str, data: UserUpdate):
         is_verified=result.get("is_verified", False),
         profile_pic=result.get("profile_pic"),
         bio=result.get("bio"),
+        streak_count=result.get("streak_count", 0),
+        last_active_at=result.get("last_active_at"),
+        last_streak_date=result.get("last_streak_date"),
         created_at=ObjectId(result["_id"]).generation_time.isoformat()
     )
