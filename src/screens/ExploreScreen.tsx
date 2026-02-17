@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 // Category icons and labels
 const CATEGORIES = [
@@ -20,9 +21,20 @@ const EBOOKS = [
 
 export default function ExploreScreen() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showEbooks, setShowEbooks] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [hasEbookAccess, setHasEbookAccess] = useState(false);
+
+  const isSeller = user?.role === "seller" || user?.role === "admin" || user?.role === "host";
+  const isApprovedSeller = user?.seller_status === "approved";
+
+  const visibleCategories = CATEGORIES.filter(cat => {
+    if (cat.title === "Seller Hub") {
+      return isSeller && isApprovedSeller;
+    }
+    return true;
+  });
 
   const handleSubscribe = () => {
     setShowPayment(true);
@@ -71,7 +83,7 @@ export default function ExploreScreen() {
 
         <h2 className="text-xl font-bold text-slate-800 mb-4">Categories</h2>
         <div className="grid grid-cols-2 gap-4">
-          {CATEGORIES.map((cat) => (
+          {visibleCategories.map((cat) => (
             <button
               key={cat.title}
               type="button"
