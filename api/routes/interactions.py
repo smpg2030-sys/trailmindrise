@@ -13,20 +13,13 @@ def toggle_like(post_id: str, user_id: str = Body(..., embed=True)):
     if db is None:
         raise HTTPException(status_code=503, detail="Database connection not established")
     
-    # 1. Check if post exists (Check primary posts, then videos, then pending)
+    # Check if post exists
     post = db.posts.find_one({"_id": ObjectId(post_id)})
-    collection_name = "posts"
-    
     if not post:
-        post = db.user_videos.find_one({"_id": ObjectId(post_id)})
-        collection_name = "user_videos"
-        
-    if not post:
+        # Check pending posts too just in case, though usually we like approved posts
         post = db.pending_posts.find_one({"_id": ObjectId(post_id)})
-        collection_name = "pending_posts"
-
-    if not post:
-        raise HTTPException(status_code=404, detail="Content not found")
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
 
     # Check if already liked
     existing_like = db.likes.find_one({"post_id": post_id, "user_id": user_id})
@@ -89,12 +82,9 @@ def add_comment(post_id: str, comment: CommentCreate, user_id: str = Body(..., e
     # Check if post exists
     post = db.posts.find_one({"_id": ObjectId(post_id)})
     if not post:
-        post = db.user_videos.find_one({"_id": ObjectId(post_id)})
-    if not post:
         post = db.pending_posts.find_one({"_id": ObjectId(post_id)})
-    
-    if not post:
-        raise HTTPException(status_code=404, detail="Content not found")
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
 
     doc = {
         "post_id": post_id,
@@ -136,20 +126,14 @@ def report_post(post_id: str, user_id: str = Body(..., embed=True)):
     if db is None:
         raise HTTPException(status_code=503, detail="Database connection not established")
     
-    # 1. Find the content in approved posts or videos
+    # 1. Find the post in approved posts
     post = db.posts.find_one({"_id": ObjectId(post_id)})
-    collection_name = "posts"
-    
-    if not post:
-        post = db.user_videos.find_one({"_id": ObjectId(post_id)})
-        collection_name = "user_videos"
-
     if not post:
         # Check if already in pending/rejected
         existing_pending = db.pending_posts.find_one({"_id": ObjectId(post_id)})
         if existing_pending:
-            return {"message": "Content already reported or under review"}
-        raise HTTPException(status_code=404, detail="Content not found")
+            return {"message": "Post already reported or under review"}
+        raise HTTPException(status_code=404, detail="Post not found")
 
     # 2. Update status and move to pending_posts (hide from public)
     timestamp = datetime.utcnow().isoformat()
@@ -162,11 +146,7 @@ def report_post(post_id: str, user_id: str = Body(..., embed=True)):
     
     post.update(moderation_updates)
     db.pending_posts.insert_one(post)
-    
-    if collection_name == "posts":
-        db.posts.delete_one({"_id": ObjectId(post_id)})
-    elif collection_name == "user_videos":
-        db.user_videos.delete_one({"_id": ObjectId(post_id)})
+    db.posts.delete_one({"_id": ObjectId(post_id)})
     
     # 3. Notify owner
     db.notifications.insert_one({

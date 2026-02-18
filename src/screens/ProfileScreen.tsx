@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   LogOut,
+  Image as ImageIcon,
   Heart,
   MessageCircle,
   X,
@@ -176,8 +177,7 @@ export default function ProfileScreen() {
     if (!window.confirm("Are you sure you want to report this video for violating guidelines? This will automatically remove it from the community for review.")) return;
 
     try {
-      // Use standard report endpoint which now handles both posts and videos
-      const res = await fetch(`${API_BASE}/posts/${videoId}/report`, {
+      const res = await fetch(`${API_BASE}/videos/${videoId}/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: currentUser.id }),
@@ -221,7 +221,7 @@ export default function ProfileScreen() {
       if (postsRes.ok) {
         const postsData = await postsRes.json();
         if (Array.isArray(postsData)) {
-          allContent = [...allContent, ...postsData.filter((p: any) => p.status !== 'rejected').map((p: any) => ({ ...p, source: 'post' }))];
+          allContent = [...allContent, ...postsData.filter((p: any) => p.status !== 'rejected')];
         }
       }
 
@@ -232,7 +232,6 @@ export default function ProfileScreen() {
             .filter((v: any) => v.status !== 'rejected')
             .map((v: any) => ({
               ...v,
-              source: 'video',
               content: v.caption || v.content || "",
             }));
           allContent = [...allContent, ...normalizedVideos];

@@ -53,17 +53,12 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Either email or mobile is required")
 
     users = db.users
-    
-    # Normalize inputs
-    email = data.email.strip().lower() if data.email else None
-    mobile = data.mobile.strip() if data.mobile else None
-    
     existing_user = None
-    if email:
-        existing_user = users.find_one({"email": email})
+    if data.email:
+        existing_user = users.find_one({"email": data.email})
     
-    if not existing_user and mobile:
-        existing_user = users.find_one({"mobile": mobile})
+    if not existing_user and data.mobile:
+        existing_user = users.find_one({"mobile": data.mobile})
     
     if existing_user:
         if existing_user.get("is_verified"):
@@ -75,8 +70,8 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     otp = generate_otp()
     
     doc = {
-        "email": email,
-        "mobile": mobile,
+        "email": data.email,
+        "mobile": data.mobile,
         "phone_number": data.phone_number,
         "password_hash": hash_password(data.password),
         "full_name": data.full_name or "",
@@ -220,14 +215,11 @@ def login(data: UserLogin):
     if db is None:
         raise HTTPException(status_code=503, detail="Database connection not established. Please check your configuration.")
     
-    # Normalize input
-    identifier = data.email.strip().lower()
-    
     # Try finding by email
-    user = db.users.find_one({"email": identifier})
+    user = db.users.find_one({"email": data.email})
     # If not found, try finding by mobile
     if not user:
-        user = db.users.find_one({"mobile": identifier})
+        user = db.users.find_one({"mobile": data.email})
 
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
