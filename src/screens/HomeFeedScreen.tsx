@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import { useHomeRefresh } from "../context/HomeRefreshContext";
 import { Post, FriendRequest, AppNotification, CommunityStory } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import VideoPlayer from "../components/VideoPlayer";
 import GrowthTree from "../components/GrowthTree";
 import PostCard from "../components/PostCard";
 
@@ -18,7 +17,6 @@ const getApiBase = () => {
 };
 
 const API_BASE = getApiBase();
-const BASE_URL = API_BASE.endsWith("/api") ? API_BASE.slice(0, -4) : API_BASE;
 
 export default function HomeFeedScreen() {
   const navigate = useNavigate();
@@ -160,11 +158,15 @@ export default function HomeFeedScreen() {
       let newItems: any[] = [];
       if (postsRes.ok) {
         const data = await postsRes.json();
-        if (Array.isArray(data)) newItems = [...newItems, ...data];
+        if (Array.isArray(data)) {
+          newItems = [...newItems, ...data.map(p => ({ ...p, source: 'post' }))];
+        }
       }
       if (videosRes.ok) {
         const data = await videosRes.json();
-        if (Array.isArray(data)) newItems = [...newItems, ...data];
+        if (Array.isArray(data)) {
+          newItems = [...newItems, ...data.map(v => ({ ...v, source: 'video' }))];
+        }
       }
 
       // Sort combined in memory
@@ -230,7 +232,8 @@ export default function HomeFeedScreen() {
     if (!window.confirm("Are you sure you want to report this video for violating guidelines? This will automatically remove it from the community for review.")) return;
 
     try {
-      const res = await fetch(`${API_BASE}/videos/${videoId}/report`, {
+      // Use standard report endpoint which now handles both posts and videos
+      const res = await fetch(`${API_BASE}/posts/${videoId}/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: user.id }),
@@ -777,46 +780,15 @@ export default function HomeFeedScreen() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.1 }}
-                      className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group"
                     >
-                      <div className="p-4 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs uppercase">
-                          {item.author_name?.[0] || "U"}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">{item.author_name}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleReportVideo(item.id)}
-                          className="ml-auto p-2 text-slate-300 hover:text-rose-500 transition-colors"
-                          title="Report Post"
-                        >
-                          <AlertCircle className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      <div
-                        className="aspect-[9/16] max-h-[600px] w-full bg-black shadow-inner"
-                        data-video-id={item.id}
-                      >
-                        <VideoPlayer
-                          src={item.video_url?.startsWith("/static") ? `${BASE_URL}${item.video_url}` : (item.video_url || "")}
-                          className="h-full"
-                          shouldPlay={item.id === activeVideoId}
-                        />
-                      </div>
-
-                      {item.content && (
-                        <div className="p-4 pt-3">
-                          <p className="text-slate-700 text-sm leading-relaxed">
-                            <span className="font-bold mr-2 text-slate-900">{item.author_name}</span>
-                            {item.content}
-                          </p>
-                        </div>
-                      )}
+                      <PostCard
+                        post={item}
+                        currentUserId={user?.id || ""}
+                        activeVideoId={activeVideoId}
+                        onLikeToggle={handleLikeToggle}
+                        onCommentSubmit={handleCommentSubmit}
+                        onReport={handleReportVideo}
+                      />
                     </motion.div>
                   );
                 }
