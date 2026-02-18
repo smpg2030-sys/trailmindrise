@@ -9,6 +9,8 @@ const CATEGORIES = [
   { icon: "🖼️", title: "Journaling", subtitle: "Daily Prompts", bg: "bg-sky-100" },
   { icon: "🛒", title: "Marketplace", subtitle: "Mindful Shop", bg: "bg-indigo-100" },
   { icon: "🏪", title: "Seller Hub", subtitle: "Manage Store", bg: "bg-violet-100" },
+  { icon: "📖", title: "E-Books", subtitle: "Wellness Library", bg: "bg-amber-100" },
+  { icon: "👥", title: "Community", subtitle: "Stories & Support", bg: "bg-rose-100" },
 ];
 
 const EBOOKS = [
