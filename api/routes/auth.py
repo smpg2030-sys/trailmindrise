@@ -55,9 +55,11 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     users = db.users
     existing_user = None
     if data.email:
+        data.email = data.email.strip().lower()
         existing_user = users.find_one({"email": data.email})
     
     if not existing_user and data.mobile:
+        data.mobile = data.mobile.strip()
         existing_user = users.find_one({"mobile": data.mobile})
     
     if existing_user:
@@ -175,11 +177,12 @@ def verify_otp(data: OTPVerify):
     if db is None:
          raise HTTPException(status_code=503, detail="Database not available")
     
-    user = db.users.find_one({"email": data.email})
+    identifier = data.email.strip().lower()
+    user = db.users.find_one({"email": identifier})
     
     # If not found by email, try finding by mobile (data.email might be holding the mobile number string)
     if not user:
-        user = db.users.find_one({"mobile": data.email})
+        user = db.users.find_one({"mobile": data.email.strip()})
 
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -215,11 +218,12 @@ def login(data: UserLogin):
     if db is None:
         raise HTTPException(status_code=503, detail="Database connection not established. Please check your configuration.")
     
+    identifier = data.email.strip().lower()
     # Try finding by email
-    user = db.users.find_one({"email": data.email})
+    user = db.users.find_one({"email": identifier})
     # If not found, try finding by mobile
     if not user:
-        user = db.users.find_one({"mobile": data.email})
+        user = db.users.find_one({"mobile": data.email.strip()})
 
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")

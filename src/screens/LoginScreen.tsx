@@ -56,7 +56,7 @@ export default function LoginScreen() {
 
       if (mode === "login") {
         endpoint = "/auth/login";
-        body = { email: emailOrMobile, password }; // Backend handles email field as identifier
+        body = { email: emailOrMobile.trim(), password }; // Backend handles email field as identifier
       } else if (mode === "register") {
         endpoint = "/auth/register";
         body = {
