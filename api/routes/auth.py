@@ -288,7 +288,7 @@ async def forgot_password(data: PasswordResetRequest, background_tasks: Backgrou
     
     # Send Email
     message = MessageSchema(
-        subject="MindRise Password Reset OTP",
+        subject="Bodham Password Reset OTP",
         recipients=[data.email],
         body=f"Your password reset code is: {otp}",
         subtype=MessageType.html
@@ -322,9 +322,9 @@ async def reset_password(data: PasswordResetConfirm, background_tasks: Backgroun
     
     # Send Confirmation Email
     message = MessageSchema(
-        subject="MindRise: Password Changed Successfully",
+        subject="Bodham: Password Changed Successfully",
         recipients=[data.email],
-        body=f"Hello,\n\nYour password for MindRise has been successfully changed. If you did not request this change, please contact support immediately.",
+        body=f"Hello,\n\nYour password for Bodham has been successfully changed. If you did not request this change, please contact support immediately.",
         subtype=MessageType.html
     )
 
